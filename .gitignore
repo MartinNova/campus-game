@@ -1,0 +1,13 @@
+# Python
+__pycache__/
+*.pyc
+.pytest_cache/
+.venv/
+venv/
+
+# Secrets – never commit
+.env
+.streamlit/secrets.toml
+
+# macOS
+.DS_Store
