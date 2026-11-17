@@ -3,8 +3,8 @@ import {
   Dumbbell,
   Flower2,
   Home,
+  School,
   Trophy,
-  UtensilsCrossed,
   Users,
   Waves,
   type LucideIcon,
@@ -18,6 +18,8 @@ export interface NavItem {
   label: string;
   icon: LucideIcon;
   status: ModuleStatus;
+  /** Other routes that should highlight this tab, e.g. "/canteen" for Campus. */
+  alsoActiveFor?: string[];
 }
 
 export interface SubModule extends NavItem {
@@ -35,7 +37,14 @@ export const MAIN_NAV: NavItem[] = [
   { href: "/sport", label: "Sport", icon: Trophy, status: "live" },
   { href: "/timetable", label: "Timetable", icon: CalendarDays, status: "soon" },
   { href: "/friends", label: "Friends", icon: Users, status: "soon" },
-  { href: "/canteen", label: "Canteen", icon: UtensilsCrossed, status: "soon" },
+  // Campus bundles library, study rooms, map and the canteen (/canteen stays its own page).
+  {
+    href: "/campus",
+    label: "Campus",
+    icon: School,
+    status: "live",
+    alsoActiveFor: ["/canteen"],
+  },
 ];
 
 /** Sub-modules of the Sport module. Flip `status` to "live" when a feature is merged. */
@@ -75,6 +84,9 @@ export const SPORT_MODULES: SubModule[] = [
 ];
 
 /** True if `pathname` belongs to the nav item (so /sport/surf highlights "Sport"). */
-export function isActive(pathname: string, href: string): boolean {
-  return href === "/" ? pathname === "/" : pathname === href || pathname.startsWith(`${href}/`);
+export function isActive(pathname: string, href: string, alsoActiveFor: string[] = []): boolean {
+  if (href === "/") return pathname === "/";
+  return [href, ...alsoActiveFor].some(
+    (route) => pathname === route || pathname.startsWith(`${route}/`),
+  );
 }
