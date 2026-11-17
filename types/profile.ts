@@ -1,10 +1,34 @@
 /**
  * Student profile: data contract.
- * Created automatically on the first Microsoft sign-in (see supabase/migrations),
- * the student fills in the rest on /profile. In demo mode it lives in localStorage.
+ * Created automatically on sign-up (see supabase/migrations), edited on /settings.
+ * In demo mode it lives in localStorage.
  */
 
-export const PROGRAMS = ["Bachelor", "Master", "MBA", "Exchange", "PhD", "Other"] as const;
+/** Nova SBE programmes (from novasbe.unl.pt, checked 17.11.2026). */
+export const NOVA_PROGRAMS = {
+  "Master's": [
+    "Business Analytics",
+    "CEMS MIM",
+    "Economics",
+    "Finance",
+    "Impact Entrepreneurship & Innovation",
+    "International Development & Public Policy",
+    "International Master's in Finance",
+    "International Master's in Management",
+    "Law & Economics of the Sea",
+    "Law & Management",
+    "Management",
+  ],
+  "Bachelor's": ["Economics (Bachelor)", "Management (Bachelor)", "Ocean Studies (Bachelor)"],
+  Other: ["The Lisbon MBA", "Ph.D.", "Other"],
+} as const;
+
+export const STUDY_STATUSES = {
+  regular: "Regular student",
+  exchange: "Exchange student",
+  "double-degree": "Double degree",
+} as const;
+export type StudyStatus = keyof typeof STUDY_STATUSES | "";
 
 export const SPORT_INTERESTS = [
   "Padel",
@@ -17,34 +41,80 @@ export const SPORT_INTERESTS = [
   "Tennis",
 ] as const;
 
+export const LANGUAGES = [
+  "English",
+  "Portuguese",
+  "German",
+  "Spanish",
+  "French",
+  "Italian",
+  "Dutch",
+  "Chinese",
+  "Polish",
+  "Swedish",
+  "Turkish",
+  "Arabic",
+  "Hindi",
+  "Russian",
+] as const;
+
+export const WEEKDAYS = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"] as const;
+export const DAY_TIMES = ["Morning", "Afternoon", "Evening"] as const;
+
+export const VISIBILITIES = {
+  everyone: "All students on the app",
+  private: "Only me",
+} as const;
+export type Visibility = keyof typeof VISIBILITIES;
+
 export interface Profile {
   /** Same id as the user (auth user id in Supabase). */
   userId: string;
+  /** Read-only: comes from the login. Empty for demo accounts. */
+  email: string;
+  /** Read-only: taken from a Nova e-mail (79109@novasbe.pt -> 79109). */
+  studentId: string;
+
+  username: string;
   firstName: string;
   lastName: string;
-  /** From Microsoft, not editable. Empty for demo accounts. */
-  email: string;
-  /** From the Nova e-mail, not editable. */
-  studentId: string;
-  /** One of PROGRAMS, or "" if not set yet. */
+  /** Public URL of the profile picture, or "" for initials. */
+  avatarUrl: string;
+  /** Short intro, max. BIO_MAX_LENGTH characters. */
+  bio: string;
+  /** ISO country code, e.g. "DE", or "". */
+  country: string;
+  languages: string[];
+  /** Instagram handle without @. */
+  instagram: string;
+  /** Full LinkedIn profile URL. */
+  linkedin: string;
+
+  /** Nova programme from NOVA_PROGRAMS, or "". */
   program: string;
-  /** Values from SPORT_INTERESTS. */
+  /** Month "YYYY-MM", or "". */
+  studyStart: string;
+  studyEnd: string;
+  studyStatus: StudyStatus;
+
   sports: string[];
   /** Lower bound of a padel level band (see types/padel.ts), or null. */
   padelLevel: number | null;
-  /** Short intro, max. 300 characters. */
-  bio: string;
+  availabilityDays: string[];
+  availabilityTimes: string[];
+
+  visibility: Visibility;
+  showInSuggestions: boolean;
 }
 
-/** The fields a student may change themselves. */
-export type ProfileUpdate = Pick<
-  Profile,
-  "firstName" | "lastName" | "program" | "sports" | "padelLevel" | "bio"
->;
+/** Everything a student may change themselves. */
+export type ProfileUpdate = Omit<Profile, "userId" | "email" | "studentId">;
 
 export const BIO_MAX_LENGTH = 300;
 
 export interface ProfileService {
   getProfile(userId: string): Promise<Profile | null>;
   updateProfile(userId: string, update: ProfileUpdate): Promise<Profile>;
+  /** Uploads a (square, already resized) image and returns its public URL. */
+  uploadAvatar(userId: string, image: Blob): Promise<string>;
 }

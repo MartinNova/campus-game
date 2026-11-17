@@ -1,22 +1,22 @@
 "use client";
 
 import { createContext, useCallback, useContext, useEffect, useState } from "react";
-import { authService, userService } from "@/lib/services/user.service";
+import { authService } from "@/lib/services/auth.service";
+import { userService } from "@/lib/services/user.service";
 import { AUTH_MODE } from "@/lib/supabase/config";
 import type { User } from "@/types/user";
 
 interface CurrentUserContextValue {
-  /** null = signed out (Microsoft mode) or still loading (see `ready`). */
+  /** null = signed out (accounts mode) or still loading (see `ready`). */
   user: User | null;
   users: User[];
   /** False until the first load finished, so we don't flash "Sign in". */
   ready: boolean;
-  /** "demo" = account switcher, "microsoft" = real Nova sign-in. */
+  /** "demo" = account switcher, "accounts" = real sign-in. */
   mode: typeof AUTH_MODE;
   switchUser: (userId: string) => void;
-  signIn: () => Promise<void>;
   signOut: () => Promise<void>;
-  /** Reload user data, e.g. after the profile was saved. */
+  /** Reload user data, e.g. after sign-in or after the profile was saved. */
   refresh: () => Promise<void>;
 }
 
@@ -65,10 +65,6 @@ export function CurrentUserProvider({ children }: { children: React.ReactNode })
     [users],
   );
 
-  const signIn = useCallback(async () => {
-    await authService?.signInWithMicrosoft();
-  }, []);
-
   const signOut = useCallback(async () => {
     await authService?.signOut();
     await refresh();
@@ -76,7 +72,7 @@ export function CurrentUserProvider({ children }: { children: React.ReactNode })
 
   return (
     <CurrentUserContext.Provider
-      value={{ user, users, ready, mode: AUTH_MODE, switchUser, signIn, signOut, refresh }}
+      value={{ user, users, ready, mode: AUTH_MODE, switchUser, signOut, refresh }}
     >
       {children}
     </CurrentUserContext.Provider>

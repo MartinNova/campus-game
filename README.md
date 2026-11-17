@@ -22,7 +22,7 @@ shared UI components and placeholder pages for Timetable, Friends and Canteen.
 - Tailwind CSS, lucide-react icons
 - ESLint + Prettier, GitHub Actions CI
 - Data: mock data / localStorage behind a service layer (`lib/services`); Supabase for
-  "Sign in with Microsoft" and profiles when configured ([docs/microsoft-login.md](docs/microsoft-login.md))
+  accounts, profiles and pictures when configured ([docs/accounts.md](docs/accounts.md))
 
 ## Setup
 
@@ -80,7 +80,7 @@ See [CONTRIBUTING.md](CONTRIBUTING.md) for which files belong to which module.
 2. Timetable tracker
 3. Friends and meet-ups
 4. Canteen menu
-5. Supabase auth and database (Microsoft sign-in + profiles prepared, see [docs/microsoft-login.md](docs/microsoft-login.md))
+5. Supabase auth and database: accounts, profiles and settings ([docs/accounts.md](docs/accounts.md)); Microsoft sign-in prepared
 
 ## Team
 

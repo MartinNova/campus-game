@@ -4,14 +4,14 @@ import { ALLOWED_EMAIL_DOMAINS, isSupabaseConfigured } from "@/lib/supabase/conf
 import { getSupabaseServer } from "@/lib/supabase/server";
 
 /**
- * Microsoft sends the user back here after sign-in (via Supabase).
- * We swap the one-time code for a session cookie, check the e-mail domain
- * and continue to the profile page.
+ * Links from Supabase land here: the confirmation e-mail after sign-up, an
+ * e-mail change, or the Microsoft sign-in. We swap the one-time code for a
+ * session cookie, check the e-mail domain (if restricted) and open your area.
  */
 export async function GET(request: NextRequest) {
   const { searchParams, origin } = request.nextUrl;
   const code = searchParams.get("code");
-  const fail = (reason: string) => NextResponse.redirect(`${origin}/profile?login_error=${reason}`);
+  const fail = (reason: string) => NextResponse.redirect(`${origin}/login?login_error=${reason}`);
 
   if (!isSupabaseConfigured || !code) return fail("missing_code");
 
@@ -21,7 +21,7 @@ export async function GET(request: NextRequest) {
 
   if (!isAllowedEmail(data.user.email, ALLOWED_EMAIL_DOMAINS)) {
     await supabase.auth.signOut();
-    return fail("not_nova");
+    return fail("not_allowed");
   }
 
   return NextResponse.redirect(`${origin}/profile`);

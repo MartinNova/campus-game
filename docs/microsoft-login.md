@@ -1,5 +1,9 @@
 # Sign in with Microsoft (Nova account)
 
+> Optional extra to the normal accounts ([docs/accounts.md](accounts.md)). Turn it on with
+> `NEXT_PUBLIC_MICROSOFT_LOGIN=true` once the Azure app registration exists.
+> Status 17.11.2026: Nova blocks app registrations for students, so this needs Nova IT.
+
 Students sign in with their `@novasbe.pt` Microsoft 365 account. Supabase handles
 the login and stores the profiles. Without the Supabase keys in `.env.local` the
 app simply keeps the demo login, so this setup is only needed once, by one person.

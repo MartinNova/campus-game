@@ -11,6 +11,10 @@ describe("isAllowedEmail", () => {
     expect(isAllowedEmail("novasbe.pt@evil.com", ["novasbe.pt"])).toBe(false);
     expect(isAllowedEmail(undefined, ["novasbe.pt"])).toBe(false);
   });
+  it("allows every address when no domains are set", () => {
+    expect(isAllowedEmail("someone@gmail.com", [])).toBe(true);
+    expect(isAllowedEmail("", [])).toBe(false);
+  });
 });
 
 describe("studentIdFromEmail", () => {
