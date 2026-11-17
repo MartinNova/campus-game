@@ -114,6 +114,9 @@ export const BIO_MAX_LENGTH = 300;
 
 export interface ProfileService {
   getProfile(userId: string): Promise<Profile | null>;
+  getProfileByUsername(username: string): Promise<Profile | null>;
+  /** Everyone whose profile is visible to all students (the Friends directory). */
+  listProfiles(): Promise<Profile[]>;
   updateProfile(userId: string, update: ProfileUpdate): Promise<Profile>;
   /** Uploads a (square, already resized) image and returns its public URL. */
   uploadAvatar(userId: string, image: Blob): Promise<string>;

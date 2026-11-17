@@ -4,7 +4,6 @@ import type { User } from "@/types/user";
 /** One row of the `profiles` table (see supabase/migrations). */
 export interface ProfileRow {
   id: string;
-  email: string;
   student_id: string;
   username: string | null;
   first_name: string;
@@ -27,18 +26,20 @@ export interface ProfileRow {
   show_in_suggestions: boolean;
 }
 
+/** Everything except e-mail: other students can't read it (see migrations). */
 export const PROFILE_COLUMNS =
-  "id, email, student_id, username, first_name, last_name, avatar_url, bio, country, languages, " +
+  "id, student_id, username, first_name, last_name, avatar_url, bio, country, languages, " +
   "instagram, linkedin, program, study_start, study_end, study_status, sports, padel_level, " +
   "availability_days, availability_times, visibility, show_in_suggestions";
 
 /** Enough for names and avatars in lists (padel players, running clubs, ...). */
-export const USER_COLUMNS = "id, email, student_id, username, first_name, last_name, avatar_url";
+export const USER_COLUMNS = "id, student_id, username, first_name, last_name, avatar_url";
 
-export function rowToProfile(row: ProfileRow): Profile {
+/** `email` is only known for your own profile (from the login). */
+export function rowToProfile(row: ProfileRow, email = ""): Profile {
   return {
     userId: row.id,
-    email: row.email,
+    email,
     studentId: row.student_id,
     username: row.username ?? "",
     firstName: row.first_name,
@@ -66,8 +67,9 @@ export function rowToProfile(row: ProfileRow): Profile {
 export function rowToUser(
   row: Pick<
     ProfileRow,
-    "id" | "email" | "student_id" | "username" | "first_name" | "last_name" | "avatar_url"
+    "id" | "student_id" | "username" | "first_name" | "last_name" | "avatar_url"
   >,
+  email?: string,
 ): User {
   return {
     id: row.id,
@@ -76,7 +78,7 @@ export function rowToUser(
     lastName: row.last_name,
     studentId: row.student_id,
     role: "student",
-    email: row.email,
+    email,
     username: row.username ?? undefined,
     avatarUrl: row.avatar_url,
   };
