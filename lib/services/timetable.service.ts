@@ -7,11 +7,16 @@ import type { TimetableData, TimetableService } from "@/types/timetable";
  * Swap for a Supabase version (per user) later; the UI stays the same.
  */
 const KEY = "timetable";
-const EMPTY: TimetableData = { lectures: [], calendars: [] };
+const EMPTY: TimetableData = { lectures: [], calendars: [], events: [] };
 
 function load(): TimetableData {
   const data = readJSON<TimetableData>(KEY, EMPTY);
-  return { lectures: data.lectures ?? [], calendars: data.calendars ?? [] };
+  // `?? []` keeps older saved data (from before a field existed) working.
+  return {
+    lectures: data.lectures ?? [],
+    calendars: data.calendars ?? [],
+    events: data.events ?? [],
+  };
 }
 
 function save(data: TimetableData): TimetableData {
@@ -55,5 +60,15 @@ export const timetableService: TimetableService = {
   async removeCalendar(id) {
     const data = load();
     return save({ ...data, calendars: data.calendars.filter((c) => c.id !== id) });
+  },
+
+  async addEvent(input) {
+    const data = load();
+    return save({ ...data, events: [...data.events, { ...input, id: `event:${newId()}` }] });
+  },
+
+  async removeEvent(id) {
+    const data = load();
+    return save({ ...data, events: data.events.filter((e) => e.id !== id) });
   },
 };

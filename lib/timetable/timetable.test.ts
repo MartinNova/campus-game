@@ -62,7 +62,7 @@ describe("expandLecture", () => {
 
   it("is cancelled on holidays in the full timetable", () => {
     const events = eventsBetween(
-      { lectures: [lecture], calendars: [] },
+      { lectures: [lecture], calendars: [], events: [] },
       "2026-11-30",
       "2026-12-06",
     );
@@ -124,7 +124,11 @@ describe("ics", () => {
 
 describe("filterByCategory", () => {
   it("keeps only selected categories", () => {
-    const events = eventsBetween({ lectures: [], calendars: [] }, "2026-12-01", "2026-12-31");
+    const events = eventsBetween(
+      { lectures: [], calendars: [], events: [] },
+      "2026-12-01",
+      "2026-12-31",
+    );
     expect(filterByCategory(events, ["exam"])).toEqual([]);
     expect(filterByCategory(events, ["holiday"]).length).toBe(3); // 1, 8, 25 Dec
   });
@@ -156,5 +160,28 @@ describe("calendar helpers", () => {
     expect([byId.a.lane, byId.b.lane, byId.a.laneCount]).toEqual([0, 1, 2]);
     expect([byId.c.lane, byId.c.laneCount]).toEqual([0, 1]);
     expect(byId.d.endMin - byId.d.startMin).toBe(30);
+  });
+});
+
+describe("one-time events", () => {
+  it("show up on their date", () => {
+    const events = eventsBetween(
+      {
+        lectures: [],
+        calendars: [],
+        events: [
+          {
+            id: "event:1",
+            title: "Group meeting",
+            date: "2026-11-18",
+            start: "18:00",
+            category: "lecture",
+          },
+        ],
+      },
+      "2026-11-16",
+      "2026-11-22",
+    );
+    expect(events.map((e) => e.title)).toEqual(["Group meeting"]);
   });
 });

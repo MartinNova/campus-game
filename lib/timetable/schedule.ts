@@ -40,6 +40,7 @@ export function eventsBetween(data: TimetableData, from: string, to: string): Ti
   const all = [
     ...data.lectures.flatMap((l) => expandLecture(l, holidayDates)),
     ...data.calendars.flatMap((c) => c.events),
+    ...(data.events ?? []),
     ...holidays,
   ];
 

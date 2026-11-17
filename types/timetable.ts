@@ -56,9 +56,14 @@ export interface ImportedCalendar {
   events: TimetableEvent[];
 }
 
+/** A one-time event the user added by hand (e.g. a group meeting or an extra exam). */
+export type NewEvent = Omit<TimetableEvent, "id">;
+
 export interface TimetableData {
   lectures: Lecture[];
   calendars: ImportedCalendar[];
+  /** One-time events added by hand. */
+  events: TimetableEvent[];
 }
 
 /**
@@ -75,4 +80,6 @@ export interface TimetableService {
     icsText: string,
   ): Promise<TimetableData>;
   removeCalendar(id: string): Promise<TimetableData>;
+  addEvent(input: NewEvent): Promise<TimetableData>;
+  removeEvent(id: string): Promise<TimetableData>;
 }
