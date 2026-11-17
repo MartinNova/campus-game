@@ -3,7 +3,9 @@ import {
   Dumbbell,
   Flower2,
   Footprints,
+  GraduationCap,
   Home,
+  ListChecks,
   School,
   Trophy,
   Users,
@@ -36,7 +38,14 @@ export interface SubModule extends NavItem {
 export const MAIN_NAV: NavItem[] = [
   { href: "/", label: "Home", icon: Home, status: "live" },
   { href: "/sport", label: "Sport", icon: Trophy, status: "live" },
-  { href: "/timetable", label: "Timetable", icon: CalendarDays, status: "live" },
+  // Study Hub bundles the timetable and the to-do lists (/timetable stays its own page).
+  {
+    href: "/study",
+    label: "Study Hub",
+    icon: GraduationCap,
+    status: "live",
+    alsoActiveFor: ["/timetable"],
+  },
   { href: "/friends", label: "Friends", icon: Users, status: "soon" },
   // Campus bundles library, study rooms, map and Food Options (/canteen stays its own page).
   {
@@ -45,6 +54,26 @@ export const MAIN_NAV: NavItem[] = [
     icon: School,
     status: "live",
     alsoActiveFor: ["/canteen"],
+  },
+];
+
+/** Sub-modules of the Study Hub. */
+export const STUDY_MODULES: SubModule[] = [
+  {
+    href: "/timetable",
+    label: "Timetable",
+    description: "Lectures, exams, deadlines and holidays.",
+    icon: CalendarDays,
+    status: "live",
+    branch: "feature/timetable",
+  },
+  {
+    href: "/study/todos",
+    label: "To-dos",
+    description: "Lists for uni work, as a checklist or a board, by day, week or month.",
+    icon: ListChecks,
+    status: "live",
+    branch: "feature/study-hub",
   },
 ];
 
