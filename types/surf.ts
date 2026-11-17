@@ -36,6 +36,8 @@ export interface SurfForecastDay {
   rating: SurfRating;
   /** Short human-readable reasons, e.g. ["Good wave height", "Strong onshore wind"]. */
   reasons: string[];
+  /** Local time of the best-rated hour, e.g. "08:00". */
+  bestTime: string;
 }
 
 export interface SurfForecast {
