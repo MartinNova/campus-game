@@ -44,6 +44,14 @@ export const timetableService: TimetableService = {
     return save({ ...data, lectures: data.lectures.filter((l) => l.id !== id) });
   },
 
+  async updateLecture(id, patch) {
+    const data = load();
+    return save({
+      ...data,
+      lectures: data.lectures.map((l) => (l.id === id ? { ...l, ...patch } : l)),
+    });
+  },
+
   async importCalendar(name, category, icsText) {
     const id = newId();
     const events = parseIcs(icsText, category, id);

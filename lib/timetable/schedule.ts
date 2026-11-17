@@ -24,6 +24,7 @@ export function expandLecture(lecture: Lecture, holidayDates: Set<string>): Time
         end: lecture.end,
         location: lecture.location,
         category: "lecture",
+        lectureId: lecture.id,
       });
     }
     date = addDays(date, 7);

@@ -4,6 +4,7 @@ import { addDays, addMonths, startOfMonth, startOfWeek, weekday } from "./dates"
 import { easterSunday, portugueseHolidays } from "./holidays";
 import { parseIcs, parseIcsDate } from "./ics";
 import { eventsBetween, expandLecture, filterByCategory, layoutTimedEvents } from "./schedule";
+import { normalizeUrl } from "./links";
 import { suggestTerm } from "./terms";
 
 describe("dates", () => {
@@ -183,5 +184,19 @@ describe("one-time events", () => {
       "2026-11-22",
     );
     expect(events.map((e) => e.title)).toEqual(["Group meeting"]);
+  });
+});
+
+describe("normalizeUrl", () => {
+  it("adds https and keeps valid links", () => {
+    expect(normalizeUrl("moodle.novasbe.pt/course/view.php?id=12")).toBe(
+      "https://moodle.novasbe.pt/course/view.php?id=12",
+    );
+    expect(normalizeUrl("https://moodle.novasbe.pt/")).toBe("https://moodle.novasbe.pt/");
+  });
+
+  it("rejects empty and unsafe links", () => {
+    expect(normalizeUrl("  ")).toBeNull();
+    expect(normalizeUrl("javascript:alert(1)")).toBeNull();
   });
 });

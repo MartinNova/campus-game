@@ -31,9 +31,16 @@ export interface Lecture {
   end: string;
   location?: string;
   termId: string;
+  /** Link to the course page on Moodle. */
+  moodleUrl?: string;
+  /** Free-text notes for this course (reading list, professor, grading…). */
+  notes?: string;
 }
 
 export type NewLecture = Omit<Lecture, "id">;
+
+/** Fields of a lecture that can be edited later in its detail sheet. */
+export type LecturePatch = Partial<Pick<Lecture, "moodleUrl" | "notes" | "location">>;
 
 /** One entry in the timetable (lecture occurrence, exam, deadline or holiday). */
 export interface TimetableEvent {
@@ -45,6 +52,8 @@ export interface TimetableEvent {
   end?: string;
   location?: string;
   category: EventCategory;
+  /** Set for weekly lecture occurrences: the lecture they belong to. */
+  lectureId?: string;
 }
 
 /** A calendar file (.ics) the user uploaded, e.g. the exam export or Moodle deadlines. */
@@ -74,6 +83,7 @@ export interface TimetableService {
   load(): Promise<TimetableData>;
   addLecture(input: NewLecture): Promise<TimetableData>;
   removeLecture(id: string): Promise<TimetableData>;
+  updateLecture(id: string, patch: LecturePatch): Promise<TimetableData>;
   importCalendar(
     name: string,
     category: ImportedCalendar["category"],
