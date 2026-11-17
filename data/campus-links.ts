@@ -25,6 +25,18 @@ export const CAMPUS_LINK_SECTIONS: CampusLinkSection[] = [
     ],
   },
   {
+    title: "Living",
+    links: [
+      {
+        id: "rooms",
+        title: "Rooms & flats",
+        description: "Find a room near campus or pass yours on when you leave.",
+        href: "/campus/rooms",
+        icon: "home",
+      },
+    ],
+  },
+  {
     title: "On campus",
     links: [
       {

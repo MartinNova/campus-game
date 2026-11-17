@@ -1,4 +1,4 @@
-import { ArrowUpRight, BookOpenText, DoorOpen, Map, UtensilsCrossed } from "lucide-react";
+import { ArrowUpRight, BookOpenText, DoorOpen, House, Map, UtensilsCrossed } from "lucide-react";
 import Link from "next/link";
 import type { CampusLink } from "@/types/campus";
 
@@ -7,6 +7,7 @@ const ICONS = {
   "study-room": DoorOpen,
   map: Map,
   canteen: UtensilsCrossed,
+  home: House,
 } satisfies Record<CampusLink["icon"], unknown>;
 
 const CARD_CLASS =
