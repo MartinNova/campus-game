@@ -6,7 +6,6 @@ import {
   Home,
   School,
   Trophy,
-  UtensilsCrossed,
   Users,
   Waves,
   type LucideIcon,
@@ -39,7 +38,14 @@ export const MAIN_NAV: NavItem[] = [
   { href: "/sport", label: "Sport", icon: Trophy, status: "live" },
   { href: "/timetable", label: "Timetable", icon: CalendarDays, status: "soon" },
   { href: "/friends", label: "Friends", icon: Users, status: "soon" },
-  { href: "/canteen", label: "Food Options", icon: UtensilsCrossed, status: "soon" },
+  // Campus bundles library, study rooms, map and Food Options (/canteen stays its own page).
+  {
+    href: "/campus",
+    label: "Campus",
+    icon: School,
+    status: "live",
+    alsoActiveFor: ["/canteen"],
+  },
 ];
 
 /** Sub-modules of the Sport module. Flip `status` to "live" when a feature is merged. */
