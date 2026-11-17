@@ -10,8 +10,12 @@ export interface PadelClub {
   playtomicUrl: string;
 }
 
-/** Playtomic's club search for Lisbon, for clubs that are not in our list. */
-export const PLAYTOMIC_LISBON_SEARCH = "https://playtomic.com/search?q=Lisboa";
+/**
+ * Playtomic start page, for "Book a court" and clubs that are not in our list.
+ * We don't link the Lisbon search (/search?q=Lisboa) directly: on 17.11.2026 it
+ * often timed out and Safari then offered a download instead of the page.
+ */
+export const PLAYTOMIC_HOME = "https://playtomic.com/";
 
 const club = (name: string, slug: string): PadelClub => ({
   name,
@@ -30,7 +34,7 @@ export const PADEL_CLUBS: PadelClub[] = [
   club("Padel do Relógio", "padel-do-relogio"),
 ];
 
-/** Playtomic page for a location name, or the Lisbon search if we don't know the club. */
+/** Playtomic page for a location name, or the start page if we don't know the club. */
 export function playtomicUrlFor(location: string): string {
-  return PADEL_CLUBS.find((c) => c.name === location)?.playtomicUrl ?? PLAYTOMIC_LISBON_SEARCH;
+  return PADEL_CLUBS.find((c) => c.name === location)?.playtomicUrl ?? PLAYTOMIC_HOME;
 }

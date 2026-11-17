@@ -5,7 +5,7 @@ import { useCallback, useEffect, useMemo, useState } from "react";
 import { useCurrentUser } from "@/components/providers/CurrentUserProvider";
 import { Button } from "@/components/ui/Button";
 import { Card } from "@/components/ui/Card";
-import { PLAYTOMIC_LISBON_SEARCH } from "@/lib/padel/clubs";
+import { PLAYTOMIC_HOME } from "@/lib/padel/clubs";
 import { fromISODate, upcomingDates } from "@/lib/padel/dates";
 import { filterMatches } from "@/lib/padel/matches";
 import { padelService } from "@/lib/services/padel.service";
@@ -89,10 +89,12 @@ export function PadelView() {
       <Card className="mb-4 flex items-center justify-between gap-3">
         <div>
           <p className="font-semibold">Need a court?</p>
-          <p className="text-muted text-sm">Book in Lisbon on Playtomic, then post it here.</p>
+          <p className="text-muted text-sm">
+            Book on Playtomic (search “Lisboa”), then post it here.
+          </p>
         </div>
         <PlaytomicLink
-          href={PLAYTOMIC_LISBON_SEARCH}
+          href={PLAYTOMIC_HOME}
           className="bg-brand text-brand-foreground inline-flex h-10 shrink-0 items-center gap-1.5 rounded-xl px-4 text-sm font-medium hover:opacity-90"
         >
           Book a court
