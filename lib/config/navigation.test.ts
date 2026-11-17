@@ -12,6 +12,11 @@ describe("isActive", () => {
     expect(isActive("/sport", "/")).toBe(false);
   });
 
+  it("highlights Study Hub on the timetable page", () => {
+    expect(isActive("/timetable", "/study", ["/timetable"])).toBe(true);
+    expect(isActive("/study/todos", "/study", ["/timetable"])).toBe(true);
+  });
+
   it("highlights Campus on the canteen page", () => {
     expect(isActive("/canteen", "/campus", ["/canteen"])).toBe(true);
   });
