@@ -3,8 +3,8 @@ import {
   Dumbbell,
   Flower2,
   Home,
+  School,
   Trophy,
-  UtensilsCrossed,
   Users,
   Waves,
   type LucideIcon,
@@ -18,6 +18,8 @@ export interface NavItem {
   label: string;
   icon: LucideIcon;
   status: ModuleStatus;
+  /** Other routes that should highlight this tab, e.g. "/canteen" for Campus. */
+  alsoActiveFor?: string[];
 }
 
 export interface SubModule extends NavItem {
@@ -75,6 +77,9 @@ export const SPORT_MODULES: SubModule[] = [
 ];
 
 /** True if `pathname` belongs to the nav item (so /sport/surf highlights "Sport"). */
-export function isActive(pathname: string, href: string): boolean {
-  return href === "/" ? pathname === "/" : pathname === href || pathname.startsWith(`${href}/`);
+export function isActive(pathname: string, href: string, alsoActiveFor: string[] = []): boolean {
+  if (href === "/") return pathname === "/";
+  return [href, ...alsoActiveFor].some(
+    (route) => pathname === route || pathname.startsWith(`${route}/`),
+  );
 }

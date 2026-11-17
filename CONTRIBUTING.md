@@ -21,11 +21,12 @@ git push -u origin feature/<module>      # 3. push, then open a Pull Request
 
 Each module owns its own files. Stay inside them:
 
-| Module | Pages              | Components                | Logic / services                              | Types            | Mock data            |
-| ------ | ------------------ | ------------------------- | --------------------------------------------- | ---------------- | -------------------- |
-| Padel  | `app/sport/padel/` | `components/sport/padel/` | `lib/services/padel.service.ts`, `lib/padel/` | `types/padel.ts` | `data/padel.mock.ts` |
-| Surf   | `app/sport/surf/`  | `components/sport/surf/`  | `lib/api/open-meteo.ts`, `lib/surf/`          | `types/surf.ts`  | `lib/surf/spots.ts`  |
-| Gym    | `app/sport/gym/`   | `components/sport/gym/`   | `lib/services/gym.service.ts`                 | `types/gym.ts`   | `data/gym.mock.ts`   |
+| Module          | Pages                       | Components                | Logic / services                                                | Types              | Mock data              |
+| --------------- | --------------------------- | ------------------------- | --------------------------------------------------------------- | ------------------ | ---------------------- |
+| Padel           | `app/sport/padel/`          | `components/sport/padel/` | `lib/services/padel.service.ts`, `lib/padel/`                   | `types/padel.ts`   | `data/padel.mock.ts`   |
+| Surf            | `app/sport/surf/`           | `components/sport/surf/`  | `lib/api/open-meteo.ts`, `lib/surf/`                            | `types/surf.ts`    | `lib/surf/spots.ts`    |
+| Gym             | `app/sport/gym/`            | `components/sport/gym/`   | `lib/services/gym.service.ts`                                   | `types/gym.ts`     | `data/gym.mock.ts`     |
+| Profile / login | `app/profile/`, `app/auth/` | `components/profile/`     | `lib/services/profile.service.ts`, `lib/auth/`, `lib/supabase/` | `types/profile.ts` | `supabase/migrations/` |
 
 Shared files (change only in small, separate PRs and tell the team):
 `app/layout.tsx`, `components/ui/`, `components/layout/`, `lib/config/`, `lib/storage.ts`, `app/globals.css`.
