@@ -36,7 +36,7 @@ export interface SubModule extends NavItem {
 export const MAIN_NAV: NavItem[] = [
   { href: "/", label: "Home", icon: Home, status: "live" },
   { href: "/sport", label: "Sport", icon: Trophy, status: "live" },
-  { href: "/timetable", label: "Timetable", icon: CalendarDays, status: "soon" },
+  { href: "/timetable", label: "Timetable", icon: CalendarDays, status: "live" },
   { href: "/friends", label: "Friends", icon: Users, status: "soon" },
   { href: "/canteen", label: "Food Options", icon: UtensilsCrossed, status: "soon" },
 ];
