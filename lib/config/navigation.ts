@@ -69,9 +69,9 @@ export const SPORT_MODULES: SubModule[] = [
   {
     href: "/sport/gym",
     label: "Gym",
-    description: "Gym locations, opening hours and classes (placeholder).",
+    description: "Viva Gym on campus: opening hours and live occupancy (simulated).",
     icon: Dumbbell,
-    status: "soon",
+    status: "live",
     branch: "feature/gym",
   },
   {
