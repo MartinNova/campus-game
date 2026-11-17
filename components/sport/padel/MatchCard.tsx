@@ -1,6 +1,8 @@
 "use client";
 
 import { Clock, MapPin, Users } from "lucide-react";
+import Link from "next/link";
+import { Avatar } from "@/components/ui/Avatar";
 import { Badge } from "@/components/ui/Badge";
 import { Button } from "@/components/ui/Button";
 import { Card } from "@/components/ui/Card";
@@ -32,9 +34,7 @@ export function MatchCard({
   const spots = freeSpots(match);
   const isCreator = match.createdBy === currentUserId;
   const isPlayer = !!currentUserId && match.playerIds.includes(currentUserId);
-  const names = match.playerIds.map((id) => users.find((u) => u.id === id)?.firstName ?? "Player");
-  if (match.guestCount > 0)
-    names.push(`+${match.guestCount} friend${match.guestCount > 1 ? "s" : ""}`);
+  const players = match.playerIds.map((id) => ({ id, user: users.find((u) => u.id === id) }));
 
   return (
     <Card>
@@ -59,10 +59,49 @@ export function MatchCard({
         <Badge tone="brand">Level {formatLevel(match.level)}</Badge>
       </div>
 
-      <p className="text-muted mt-3 flex items-center gap-1.5 text-sm">
-        <Users className="size-4 shrink-0" aria-hidden />
-        {names.join(", ")} ({match.maxPlayers - spots}/{match.maxPlayers})
-      </p>
+      <div className="mt-3 flex items-center gap-2 text-sm">
+        <Users className="text-muted size-4 shrink-0" aria-hidden />
+        <ul className="flex flex-wrap items-center gap-x-3 gap-y-1">
+          {players.map(({ id, user }) => {
+            const content = (
+              <>
+                {user && (
+                  <Avatar
+                    firstName={user.firstName}
+                    lastName={user.lastName}
+                    username={user.username}
+                    url={user.avatarUrl}
+                    size={24}
+                  />
+                )}
+                {user?.firstName ?? "Player"}
+              </>
+            );
+            return (
+              <li key={id}>
+                {user?.username ? (
+                  <Link
+                    href={`/friends/${user.username}`}
+                    className="hover:text-brand flex items-center gap-1.5"
+                  >
+                    {content}
+                  </Link>
+                ) : (
+                  <span className="flex items-center gap-1.5">{content}</span>
+                )}
+              </li>
+            );
+          })}
+          {match.guestCount > 0 && (
+            <li className="text-muted">
+              +{match.guestCount} friend{match.guestCount > 1 ? "s" : ""}
+            </li>
+          )}
+          <li className="text-muted">
+            ({match.maxPlayers - spots}/{match.maxPlayers})
+          </li>
+        </ul>
+      </div>
       {match.description && <p className="mt-2 text-sm">{match.description}</p>}
 
       <div className="mt-4 flex flex-wrap gap-2">

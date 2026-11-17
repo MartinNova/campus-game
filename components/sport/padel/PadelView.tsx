@@ -1,6 +1,7 @@
 "use client";
 
 import { CalendarPlus } from "lucide-react";
+import Link from "next/link";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { useCurrentUser } from "@/components/providers/CurrentUserProvider";
 import { Button } from "@/components/ui/Button";
@@ -19,7 +20,8 @@ const DAYS_SHOWN = 14;
 
 /** Padel calendar: pick a day, see posted courts, join or post your own. */
 export function PadelView() {
-  const { user, users } = useCurrentUser();
+  const { user, users, ready, mode } = useCurrentUser();
+  const userId = user?.id;
   // Today's date is only read in the browser (not during server rendering).
   const [dates, setDates] = useState<string[] | null>(null);
   const [selectedDate, setSelectedDate] = useState("");
@@ -30,14 +32,17 @@ export function PadelView() {
   const [error, setError] = useState<string | null>(null);
 
   const reload = useCallback(() => padelService.listMatches().then(setMatches), []);
+  // Load again when someone signs in or out (shared matches need an account).
   useEffect(() => {
     void padelService.listMatches().then((list) => {
       const days = upcomingDates(new Date(), DAYS_SHOWN);
       setDates(days);
-      setSelectedDate(days[0]);
+      setSelectedDate((current) => current || days[0]);
       setMatches(list);
     });
-  }, []);
+  }, [userId]);
+  // Live: new matches and players from other devices appear without reloading.
+  useEffect(() => padelService.onChange(() => void reload()), [reload]);
 
   const levelMatches = useMemo(() => filterMatches(matches ?? [], { level }), [matches, level]);
   const counts = useMemo(() => {
@@ -61,11 +66,28 @@ export function PadelView() {
   }
 
   async function handleCreate(input: NewPadelMatch) {
-    if (!user) throw new Error("Choose an account in the header first.");
+    if (!user) throw new Error("Please sign in first.");
     const created = await padelService.createMatch(input, user.id);
     setShowForm(false);
     setSelectedDate(created.date);
     await reload();
+  }
+
+  if (ready && mode === "accounts" && !user) {
+    return (
+      <Card className="flex flex-col items-center gap-3 py-10 text-center">
+        <p className="font-semibold">Sign in to find padel players</p>
+        <p className="text-muted max-w-xs text-sm">
+          Matches are shared with everyone on the app, so you need an account to see and join them.
+        </p>
+        <Link
+          href="/login"
+          className="bg-brand text-brand-foreground inline-flex h-10 items-center rounded-xl px-4 text-sm font-medium hover:opacity-90"
+        >
+          Sign in or create account
+        </Link>
+      </Card>
+    );
   }
 
   if (!dates || !matches) {
