@@ -2,8 +2,9 @@
  * Helpers for Nova Microsoft 365 accounts. Pure functions, unit tested.
  */
 
-/** True if the e-mail belongs to one of the allowed domains (case-insensitive). */
+/** True if the e-mail belongs to one of the allowed domains (case-insensitive). No domains = all allowed. */
 export function isAllowedEmail(email: string | null | undefined, domains: string[]): boolean {
+  if (domains.length === 0) return !!email;
   const domain = email?.trim().toLowerCase().split("@")[1];
   return !!domain && domains.includes(domain);
 }

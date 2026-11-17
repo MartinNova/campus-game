@@ -3,8 +3,8 @@ import { splitName, studentIdFromEmail } from "@/lib/auth/nova-account";
 import { readJSON, writeJSON } from "@/lib/storage";
 import { getSupabase } from "@/lib/supabase/client";
 import { AUTH_MODE } from "@/lib/supabase/config";
-import { PROFILE_COLUMNS, rowToUser, type ProfileRow } from "@/lib/supabase/profiles";
-import type { AuthService, User, UserService } from "@/types/user";
+import { USER_COLUMNS, rowToUser, type ProfileRow } from "@/lib/supabase/profiles";
+import type { User, UserService } from "@/types/user";
 
 const CURRENT_USER_KEY = "current-user-id";
 
@@ -56,17 +56,17 @@ const demoUserService: UserService = {
 };
 
 /** Reads the stored session locally (no network), so signed-out visitors cause no requests. */
-async function hasSession(): Promise<boolean> {
+export async function hasSession(): Promise<boolean> {
   const { data } = await getSupabase().auth.getSession();
   return data.session !== null;
 }
 
-/** Real accounts: the signed-in Supabase user and everyone's profile. */
+/** Real accounts: the signed-in Supabase user and everyone's (visible) profile. */
 const supabaseUserService: UserService = {
   async listUsers() {
     // Profiles are only visible when signed in; skip the request otherwise.
     if (!(await hasSession())) return [];
-    const { data, error } = await getSupabase().from("profiles").select(PROFILE_COLUMNS);
+    const { data, error } = await getSupabase().from("profiles").select(USER_COLUMNS);
     if (error) throw error;
     return (data as ProfileRow[]).map(rowToUser);
   },
@@ -79,15 +79,15 @@ const supabaseUserService: UserService = {
     if (!user) return null;
     const { data } = await supabase
       .from("profiles")
-      .select(PROFILE_COLUMNS)
+      .select(USER_COLUMNS)
       .eq("id", user.id)
       .maybeSingle();
     if (data) return rowToUser(data as ProfileRow);
-    // Profile row not there yet (e.g. migration not run): fall back to the Microsoft data.
+    // Profile row not there yet (e.g. migration not run): fall back to the login data.
     const email = user.email ?? "";
     return {
       id: user.id,
-      ...splitName(user.user_metadata?.full_name ?? user.user_metadata?.name),
+      ...splitName(user.user_metadata?.full_name ?? user.user_metadata?.username ?? ""),
       studentId: studentIdFromEmail(email),
       role: "student",
       email,
@@ -99,31 +99,4 @@ const supabaseUserService: UserService = {
 };
 
 export const userService: UserService =
-  AUTH_MODE === "microsoft" ? supabaseUserService : demoUserService;
-
-/** Sign in / out with Microsoft. `null` in demo mode. */
-export const authService: AuthService | null =
-  AUTH_MODE === "microsoft"
-    ? {
-        async signInWithMicrosoft() {
-          const { error } = await getSupabase().auth.signInWithOAuth({
-            provider: "azure",
-            options: {
-              // "email" is needed, otherwise Microsoft doesn't send the address.
-              scopes: "openid profile email",
-              redirectTo: `${window.location.origin}/auth/callback`,
-            },
-          });
-          if (error) throw error;
-        },
-        async signOut() {
-          await getSupabase().auth.signOut();
-        },
-        onChange(listener) {
-          const { data } = getSupabase().auth.onAuthStateChange((event) => {
-            if (event === "SIGNED_IN" || event === "SIGNED_OUT") listener();
-          });
-          return () => data.subscription.unsubscribe();
-        },
-      }
-    : null;
+  AUTH_MODE === "accounts" ? supabaseUserService : demoUserService;
