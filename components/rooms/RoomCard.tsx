@@ -37,7 +37,11 @@ export function RoomCard({ listing, poster, today }: RoomCardProps) {
       <div className="grid gap-2 p-4">
         <div className="flex items-start justify-between gap-3">
           <p className="font-semibold">{listing.title}</p>
-          {listing.photos.length > 1 && <Badge>{listing.photos.length} photos</Badge>}
+          {listing.photos.length > 1 && (
+            <span className="shrink-0">
+              <Badge>{listing.photos.length} photos</Badge>
+            </span>
+          )}
         </div>
         <p className="text-brand text-lg font-bold">{formatRent(listing)}</p>
         <div className="text-muted grid gap-1 text-sm">

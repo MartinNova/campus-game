@@ -81,7 +81,7 @@ export function RoomDetailView() {
           {listing.photos.map((src, i) => (
             // eslint-disable-next-line @next/next/no-img-element -- user uploads from Supabase Storage
             <img
-              key={src}
+              key={i}
               src={src}
               alt={`Photo ${i + 1} of ${listing.photos.length}`}
               className="aspect-[4/3] w-[85%] shrink-0 snap-center rounded-2xl object-cover sm:w-[70%]"
