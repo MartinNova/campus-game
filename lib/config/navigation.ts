@@ -6,6 +6,7 @@ import {
   School,
   Trophy,
   Users,
+  UtensilsCrossed,
   Waves,
   type LucideIcon,
 } from "lucide-react";
