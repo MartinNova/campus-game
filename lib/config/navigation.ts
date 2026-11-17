@@ -6,6 +6,7 @@ import {
   GraduationCap,
   Home,
   ListChecks,
+  Receipt,
   School,
   Trophy,
   Users,
@@ -74,6 +75,14 @@ export const STUDY_MODULES: SubModule[] = [
     icon: ListChecks,
     status: "live",
     branch: "feature/study-hub",
+  },
+  {
+    href: "/study/deadlines",
+    label: "Deadlines & Payments",
+    description: "Tuition instalments from netPA with countdowns and calendar reminders.",
+    icon: Receipt,
+    status: "live",
+    branch: "feature/deadlines",
   },
 ];
 

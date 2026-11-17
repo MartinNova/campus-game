@@ -8,7 +8,10 @@ export const metadata: Metadata = { title: "Campus" };
 export default function CampusPage() {
   return (
     <>
-      <PageHeader title="Campus" subtitle="Library, rooms & flats, campus map and restaurants." />
+      <PageHeader
+        title="Campus"
+        subtitle="Getting here, rooms & flats, library, campus map and restaurants."
+      />
       <div className="space-y-6">
         {CAMPUS_LINK_SECTIONS.map((section) => (
           <section key={section.title} aria-label={section.title}>

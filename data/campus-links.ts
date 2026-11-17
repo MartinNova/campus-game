@@ -25,6 +25,18 @@ export const CAMPUS_LINK_SECTIONS: CampusLinkSection[] = [
     ],
   },
   {
+    title: "Getting here",
+    links: [
+      {
+        id: "getting-here",
+        title: "Getting to campus",
+        description: "Next trains from Carcavelos and Oeiras, Uber and the map.",
+        href: "/campus/getting-here",
+        icon: "train",
+      },
+    ],
+  },
+  {
     title: "Living",
     links: [
       {
