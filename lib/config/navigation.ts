@@ -37,14 +37,7 @@ export const MAIN_NAV: NavItem[] = [
   { href: "/sport", label: "Sport", icon: Trophy, status: "live" },
   { href: "/timetable", label: "Timetable", icon: CalendarDays, status: "soon" },
   { href: "/friends", label: "Friends", icon: Users, status: "soon" },
-  // Campus bundles library, study rooms, map and the canteen (/canteen stays its own page).
-  {
-    href: "/campus",
-    label: "Campus",
-    icon: School,
-    status: "live",
-    alsoActiveFor: ["/canteen"],
-  },
+  { href: "/canteen", label: "Food Options", icon: UtensilsCrossed, status: "soon" },
 ];
 
 /** Sub-modules of the Sport module. Flip `status` to "live" when a feature is merged. */
