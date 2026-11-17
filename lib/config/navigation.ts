@@ -45,7 +45,7 @@ export const SPORT_MODULES: SubModule[] = [
     label: "Padel",
     description: "Find players and join open padel matches.",
     icon: Trophy,
-    status: "soon",
+    status: "live",
     branch: "feature/padel",
   },
   {
