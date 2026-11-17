@@ -36,8 +36,8 @@ export const CAMPUS_LINK_SECTIONS: CampusLinkSection[] = [
       },
       {
         id: "canteen",
-        title: "Canteen",
-        description: "Lunch on campus and the Mon Bistrot menu.",
+        title: "Food on campus",
+        description: "The different restaurants and cafés on campus and their menus.",
         href: "/canteen",
         icon: "canteen",
       },
