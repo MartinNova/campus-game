@@ -4,35 +4,23 @@ import { useEffect, useState } from "react";
 import { Button } from "@/components/ui/Button";
 import { Card } from "@/components/ui/Card";
 import { getSurfForecast } from "@/lib/surf/forecast";
-import { DEFAULT_SPOT_ID, getSpot } from "@/lib/surf/spots";
-import { readJSON, writeJSON } from "@/lib/storage";
+import { getSpot } from "@/lib/surf/spots";
 import type { SurfForecast } from "@/types/surf";
 import { ForecastDayCard } from "./ForecastDayCard";
-import { SpotPicker } from "./SpotPicker";
-
-const SPOT_KEY = "surf:spot";
 
 /** Result of one request; `key` tells which spot/retry it belongs to. */
 type Result =
   | { key: string; status: "error"; message: string }
   | { key: string; status: "ready"; forecast: SurfForecast };
 
-/** Spot picker + 3-day forecast. Data comes live from Open-Meteo in the browser. */
-export function SurfForecastView() {
-  const [spotId, setSpotId] = useState(DEFAULT_SPOT_ID);
+/** 3-day forecast for one spot. Data comes live from Open-Meteo in the browser. */
+export function SurfForecastView({ spotId }: { spotId: string }) {
   const [reloadKey, setReloadKey] = useState(0);
   const [result, setResult] = useState<Result | null>(null);
 
   // "Loading" is derived: we are loading whenever the last result belongs to another request.
   const requestKey = `${spotId}:${reloadKey}`;
   const state = result?.key === requestKey ? result : { status: "loading" as const };
-
-  // Remember the last chosen spot (per browser).
-  useEffect(() => {
-    const saved = readJSON<string>(SPOT_KEY, DEFAULT_SPOT_ID);
-    // eslint-disable-next-line react-hooks/set-state-in-effect -- restore from storage after hydration
-    if (getSpot(saved)) setSpotId(saved);
-  }, []);
 
   useEffect(() => {
     const spot = getSpot(spotId);
@@ -52,15 +40,8 @@ export function SurfForecastView() {
     return () => controller.abort();
   }, [spotId, reloadKey]);
 
-  function selectSpot(id: string) {
-    setSpotId(id);
-    writeJSON(SPOT_KEY, id);
-  }
-
   return (
     <>
-      <SpotPicker value={spotId} onChange={selectSpot} />
-
       {state.status === "loading" && (
         <div className="grid gap-3" aria-busy="true" aria-label="Loading forecast">
           {[0, 1, 2].map((i) => (

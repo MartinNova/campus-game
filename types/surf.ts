@@ -40,6 +40,25 @@ export interface SurfForecastDay {
   bestTime: string;
 }
 
+export interface SurfSchool {
+  id: string;
+  name: string;
+  /** Spot id from lib/surf/spots.ts. */
+  spotId: string;
+  description: string;
+  /** Free text, e.g. "Group lessons from ~€45". Prices come from booking sites and may change. */
+  priceInfo?: string;
+  /** e.g. "ISIC student discount". */
+  studentDiscount?: string;
+  /** What Google Maps should search for, e.g. "Moana Surf School, Guincho". */
+  mapsQuery: string;
+}
+
+/** Contract for surf school data. Today: static data; later: Supabase. */
+export interface SurfSchoolService {
+  listSchools(spotId?: string): Promise<SurfSchool[]>;
+}
+
 export interface SurfForecast {
   spot: SurfSpot;
   days: SurfForecastDay[];
