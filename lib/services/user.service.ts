@@ -55,14 +55,23 @@ const demoUserService: UserService = {
   },
 };
 
+/** Reads the stored session locally (no network), so signed-out visitors cause no requests. */
+async function hasSession(): Promise<boolean> {
+  const { data } = await getSupabase().auth.getSession();
+  return data.session !== null;
+}
+
 /** Real accounts: the signed-in Supabase user and everyone's profile. */
 const supabaseUserService: UserService = {
   async listUsers() {
+    // Profiles are only visible when signed in; skip the request otherwise.
+    if (!(await hasSession())) return [];
     const { data, error } = await getSupabase().from("profiles").select(PROFILE_COLUMNS);
     if (error) throw error;
     return (data as ProfileRow[]).map(rowToUser);
   },
   async getCurrentUser() {
+    if (!(await hasSession())) return null;
     const supabase = getSupabase();
     const {
       data: { user },
