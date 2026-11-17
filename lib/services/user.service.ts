@@ -1,6 +1,10 @@
 import { DEMO_USERS, TEAM_PLACEHOLDERS } from "@/data/users.mock";
+import { splitName, studentIdFromEmail } from "@/lib/auth/nova-account";
 import { readJSON, writeJSON } from "@/lib/storage";
-import type { User, UserService } from "@/types/user";
+import { getSupabase } from "@/lib/supabase/client";
+import { AUTH_MODE } from "@/lib/supabase/config";
+import { PROFILE_COLUMNS, rowToUser, type ProfileRow } from "@/lib/supabase/profiles";
+import type { AuthService, User, UserService } from "@/types/user";
 
 const CURRENT_USER_KEY = "current-user-id";
 
@@ -36,8 +40,8 @@ function allUsers(): User[] {
   return [...(team.length > 0 ? team : TEAM_PLACEHOLDERS), ...DEMO_USERS];
 }
 
-/** Mock implementation (localStorage). Swap for a Supabase version later. */
-export const userService: UserService = {
+/** Demo login: mock users, the chosen account is remembered in localStorage. */
+const demoUserService: UserService = {
   async listUsers() {
     return allUsers();
   },
@@ -50,3 +54,76 @@ export const userService: UserService = {
     writeJSON(CURRENT_USER_KEY, userId);
   },
 };
+
+/** Reads the stored session locally (no network), so signed-out visitors cause no requests. */
+async function hasSession(): Promise<boolean> {
+  const { data } = await getSupabase().auth.getSession();
+  return data.session !== null;
+}
+
+/** Real accounts: the signed-in Supabase user and everyone's profile. */
+const supabaseUserService: UserService = {
+  async listUsers() {
+    // Profiles are only visible when signed in; skip the request otherwise.
+    if (!(await hasSession())) return [];
+    const { data, error } = await getSupabase().from("profiles").select(PROFILE_COLUMNS);
+    if (error) throw error;
+    return (data as ProfileRow[]).map(rowToUser);
+  },
+  async getCurrentUser() {
+    if (!(await hasSession())) return null;
+    const supabase = getSupabase();
+    const {
+      data: { user },
+    } = await supabase.auth.getUser();
+    if (!user) return null;
+    const { data } = await supabase
+      .from("profiles")
+      .select(PROFILE_COLUMNS)
+      .eq("id", user.id)
+      .maybeSingle();
+    if (data) return rowToUser(data as ProfileRow);
+    // Profile row not there yet (e.g. migration not run): fall back to the Microsoft data.
+    const email = user.email ?? "";
+    return {
+      id: user.id,
+      ...splitName(user.user_metadata?.full_name ?? user.user_metadata?.name),
+      studentId: studentIdFromEmail(email),
+      role: "student",
+      email,
+    };
+  },
+  async setCurrentUser() {
+    // Real accounts can't be switched; sign out and in again instead.
+  },
+};
+
+export const userService: UserService =
+  AUTH_MODE === "microsoft" ? supabaseUserService : demoUserService;
+
+/** Sign in / out with Microsoft. `null` in demo mode. */
+export const authService: AuthService | null =
+  AUTH_MODE === "microsoft"
+    ? {
+        async signInWithMicrosoft() {
+          const { error } = await getSupabase().auth.signInWithOAuth({
+            provider: "azure",
+            options: {
+              // "email" is needed, otherwise Microsoft doesn't send the address.
+              scopes: "openid profile email",
+              redirectTo: `${window.location.origin}/auth/callback`,
+            },
+          });
+          if (error) throw error;
+        },
+        async signOut() {
+          await getSupabase().auth.signOut();
+        },
+        onChange(listener) {
+          const { data } = getSupabase().auth.onAuthStateChange((event) => {
+            if (event === "SIGNED_IN" || event === "SIGNED_OUT") listener();
+          });
+          return () => data.subscription.unsubscribe();
+        },
+      }
+    : null;
