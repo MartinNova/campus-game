@@ -68,7 +68,7 @@ const supabaseUserService: UserService = {
     if (!(await hasSession())) return [];
     const { data, error } = await getSupabase().from("profiles").select(USER_COLUMNS);
     if (error) throw error;
-    return (data as ProfileRow[]).map(rowToUser);
+    return (data as ProfileRow[]).map((row) => rowToUser(row));
   },
   async getCurrentUser() {
     if (!(await hasSession())) return null;
@@ -82,7 +82,7 @@ const supabaseUserService: UserService = {
       .select(USER_COLUMNS)
       .eq("id", user.id)
       .maybeSingle();
-    if (data) return rowToUser(data as ProfileRow);
+    if (data) return rowToUser(data as ProfileRow, user.email);
     // Profile row not there yet (e.g. migration not run): fall back to the login data.
     const email = user.email ?? "";
     return {

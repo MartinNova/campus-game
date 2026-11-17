@@ -120,6 +120,8 @@ export interface PadelService {
   leaveMatch(matchId: string, userId: string): Promise<PadelMatch>;
   /** Only the creator can cancel (e.g. booking cancelled). */
   cancelMatch(matchId: string, userId: string): Promise<void>;
+  /** Calls `listener` when matches change on another device. Returns an unsubscribe function. */
+  onChange(listener: () => void): () => void;
 }
 
 export function freeSpots(

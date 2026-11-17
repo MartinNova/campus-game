@@ -46,7 +46,7 @@ export const MAIN_NAV: NavItem[] = [
     status: "live",
     alsoActiveFor: ["/timetable"],
   },
-  { href: "/friends", label: "Friends", icon: Users, status: "soon" },
+  { href: "/friends", label: "Friends", icon: Users, status: "live" },
   // Campus bundles library, study rooms, map and Food Options (/canteen stays its own page).
   {
     href: "/campus",

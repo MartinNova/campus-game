@@ -9,15 +9,17 @@ storage. Without the Supabase keys in `.env.local` the app keeps the demo login.
 | `/login`    | Sign in or create an account                                                              |
 | `/profile`  | "Your area": your profile card (picture, programme, year, interests)                      |
 | `/settings` | Profile, studies at Nova, sports & free time, privacy, account (e-mail, password, delete) |
+| `/friends`  | Everyone with a public profile, search and filters; tap someone to see how to reach them  |
 
 The header shows **Sign in** when signed out, otherwise the settings gear and your picture.
 
 ## One-time setup (Supabase)
 
 1. Create a free project on [supabase.com](https://supabase.com), region EU.
-2. **SQL Editor** → run both files in `supabase/migrations/`, oldest first:
+2. **SQL Editor** → run every file in `supabase/migrations/` once, oldest first:
    1. `20261117000000_profiles.sql` (profiles table)
    2. `20261117010000_accounts.sql` (username, picture, settings, `avatars` bucket)
+   3. `20261117020000_padel_friends.sql` (shared padel matches, live updates, e-mail hidden from others)
 3. **Authentication → Sign In / Providers → Email**: enabled (default).
    - For a live demo, turn **Confirm email** off: Supabase's built-in mail server only
      sends a few e-mails per hour. With it on, new users must click a link first.
