@@ -2,9 +2,11 @@ import {
   CalendarDays,
   Dumbbell,
   Flower2,
+  Footprints,
   Home,
   School,
   Trophy,
+  UtensilsCrossed,
   Users,
   Waves,
   type LucideIcon,
@@ -73,6 +75,14 @@ export const SPORT_MODULES: SubModule[] = [
     icon: Flower2,
     status: "live",
     branch: "feature/yoga",
+  },
+  {
+    href: "/sport/running",
+    label: "Running",
+    description: "Join Lisbon run clubs or post your own run.",
+    icon: Footprints,
+    status: "live",
+    branch: "feature/running",
   },
 ];
 
