@@ -18,6 +18,10 @@ create table public.profiles (
 
 alter table public.profiles enable row level security;
 
+-- New Supabase projects don't expose tables to the Data API automatically,
+-- so allow signed-in users explicitly. The policies below still decide which rows.
+grant select on public.profiles to authenticated;
+
 -- Every signed-in student can see the others (names in padel matches, later: friends).
 create policy "Signed-in users can read profiles"
   on public.profiles for select to authenticated
