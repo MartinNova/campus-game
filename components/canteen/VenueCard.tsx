@@ -24,7 +24,7 @@ export function VenueCard({ venue }: { venue: FoodVenue }) {
         <p className="text-muted mt-1 text-sm">{venue.subtitle}</p>
       </div>
       <p className="text-brand text-xs font-medium">
-        {external ? "Official menu" : "Explore"}
+        {venue.linkLabel ?? (external ? "Official menu" : "Explore")}
         {external && <span className="sr-only"> (opens in a new tab)</span>}
       </p>
     </Card>

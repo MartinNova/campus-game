@@ -27,6 +27,7 @@ export const FOOD_VENUES = [
     name: "Açaí Natura",
     subtitle: "Açaí bowls & smoothies",
     icon: "fruit",
-    destination: { kind: "internal", href: "/canteen/acai-natura" },
+    linkLabel: "Official website",
+    destination: { kind: "external", href: "https://acainatura.com/" },
   },
 ] as const satisfies readonly FoodVenue[];
