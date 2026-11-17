@@ -20,6 +20,7 @@ The header shows **Sign in** when signed out, otherwise the settings gear and yo
    1. `20261117000000_profiles.sql` (profiles table)
    2. `20261117010000_accounts.sql` (username, picture, settings, `avatars` bucket)
    3. `20261117020000_padel_friends.sql` (shared padel matches, live updates, e-mail hidden from others)
+   4. `20261118000000_rooms.sql` (rooms & flats listings, `room-photos` bucket, live updates)
 3. **Authentication → Sign In / Providers → Email**: enabled (default).
    - For a live demo, turn **Confirm email** off: Supabase's built-in mail server only
      sends a few e-mails per hour. With it on, new users must click a link first.
