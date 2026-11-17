@@ -1,11 +1,11 @@
 "use client";
 
-import { X } from "lucide-react";
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { formatDay, weekday } from "@/lib/timetable/dates";
 import type { NewEvent, NewLecture } from "@/types/timetable";
 import { EventForm } from "./EventForm";
 import { LectureForm } from "./LectureForm";
+import { Sheet } from "./Sheet";
 
 export interface AddDraft {
   date: string;
@@ -36,92 +36,61 @@ export function AddDialog({
   const end =
     draft.hour === undefined ? undefined : draft.hour >= 23 ? "23:59" : pad(draft.hour + 1);
 
-  // Close with Escape.
-  useEffect(() => {
-    const onKey = (e: KeyboardEvent) => e.key === "Escape" && onClose();
-    window.addEventListener("keydown", onKey);
-    return () => window.removeEventListener("keydown", onKey);
-  }, [onClose]);
-
   return (
-    <div className="fixed inset-0 z-40 flex items-end justify-center sm:items-center">
-      <button
-        type="button"
-        aria-label="Close"
-        onClick={onClose}
-        className="absolute inset-0 bg-black/40"
-      />
-      <div
-        role="dialog"
-        aria-modal="true"
-        aria-labelledby="add-dialog-title"
-        className="bg-surface relative max-h-[90vh] w-full max-w-md overflow-y-auto rounded-t-3xl p-5 pb-[calc(1.25rem+env(safe-area-inset-bottom))] shadow-xl sm:rounded-3xl"
-      >
-        <div className="mb-4 flex items-start justify-between gap-3">
-          <div>
-            <h2 id="add-dialog-title" className="text-lg font-semibold">
-              Add to timetable
-            </h2>
-            <p className="text-muted text-sm">
-              {formatDay(draft.date, { weekday: "long", day: "numeric", month: "long" })}
-              {start && ` · ${start}`}
-            </p>
-          </div>
+    <Sheet
+      title="Add to timetable"
+      subtitle={
+        <>
+          {formatDay(draft.date, { weekday: "long", day: "numeric", month: "long" })}
+          {start && ` · ${start}`}
+        </>
+      }
+      onClose={onClose}
+    >
+      <div role="tablist" aria-label="Kind" className="bg-border/60 mb-4 flex rounded-xl p-1">
+        {(
+          [
+            ["once", "One-time"],
+            ["weekly", "Weekly lecture"],
+          ] as const
+        ).map(([value, label]) => (
           <button
+            key={value}
             type="button"
-            onClick={onClose}
-            aria-label="Close"
-            className="text-muted hover:bg-border/60 rounded-lg p-1.5"
+            role="tab"
+            aria-selected={mode === value}
+            onClick={() => setMode(value)}
+            className={`flex-1 rounded-lg py-1.5 text-sm font-medium transition-colors ${
+              mode === value ? "bg-surface shadow-sm" : "text-muted hover:text-foreground"
+            }`}
           >
-            <X className="size-5" aria-hidden />
+            {label}
           </button>
-        </div>
-
-        <div role="tablist" aria-label="Kind" className="bg-border/60 mb-4 flex rounded-xl p-1">
-          {(
-            [
-              ["once", "One-time"],
-              ["weekly", "Weekly lecture"],
-            ] as const
-          ).map(([value, label]) => (
-            <button
-              key={value}
-              type="button"
-              role="tab"
-              aria-selected={mode === value}
-              onClick={() => setMode(value)}
-              className={`flex-1 rounded-lg py-1.5 text-sm font-medium transition-colors ${
-                mode === value ? "bg-surface shadow-sm" : "text-muted hover:text-foreground"
-              }`}
-            >
-              {label}
-            </button>
-          ))}
-        </div>
-
-        {mode === "once" ? (
-          <EventForm
-            defaultDate={draft.date}
-            defaultStart={start}
-            defaultEnd={end}
-            onSubmit={async (event) => {
-              await onAddEvent(event);
-              onClose();
-            }}
-          />
-        ) : (
-          <LectureForm
-            defaultTermId={defaultTermId}
-            defaultWeekday={weekday(draft.date)}
-            defaultStart={start}
-            defaultEnd={end}
-            onSubmit={async (lecture) => {
-              await onAddLecture(lecture);
-              onClose();
-            }}
-          />
-        )}
+        ))}
       </div>
-    </div>
+
+      {mode === "once" ? (
+        <EventForm
+          defaultDate={draft.date}
+          defaultStart={start}
+          defaultEnd={end}
+          onSubmit={async (event) => {
+            await onAddEvent(event);
+            onClose();
+          }}
+        />
+      ) : (
+        <LectureForm
+          defaultTermId={defaultTermId}
+          defaultWeekday={weekday(draft.date)}
+          defaultStart={start}
+          defaultEnd={end}
+          onSubmit={async (lecture) => {
+            await onAddLecture(lecture);
+            onClose();
+          }}
+        />
+      )}
+    </Sheet>
   );
 }

@@ -9,12 +9,15 @@ export function DayList({
   today,
   events,
   onRemove,
+  onOpenLecture,
 }: {
   date: string;
   today: string;
   events: TimetableEvent[];
   /** Called for events the user added by hand (ids start with "event:"). */
   onRemove?: (id: string) => void;
+  /** Opens the detail sheet of a weekly lecture. */
+  onOpenLecture?: (lectureId: string) => void;
 }) {
   return (
     <section aria-label="Selected day" className="mt-4">
@@ -42,7 +45,15 @@ export function DayList({
                 </button>
               </div>
             ) : (
-              <EventRow key={event.id} event={event} />
+              <EventRow
+                key={event.id}
+                event={event}
+                onClick={
+                  onOpenLecture && event.lectureId
+                    ? () => onOpenLecture(event.lectureId!)
+                    : undefined
+                }
+              />
             ),
           )}
         </ul>

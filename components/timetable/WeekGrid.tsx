@@ -19,6 +19,8 @@ interface WeekGridProps {
   onSelectDay: (date: string) => void;
   /** Tapping an empty slot: add something on this day at this hour. */
   onCreateAt: (date: string, hour: number) => void;
+  /** Tapping a weekly lecture block opens its details. */
+  onOpenLecture: (lectureId: string) => void;
 }
 
 /**
@@ -27,7 +29,7 @@ interface WeekGridProps {
  * Weekend columns only appear when something is scheduled.
  */
 export function WeekGrid(props: WeekGridProps) {
-  const { weekStart, today, selected, events, onSelectDay, onCreateAt } = props;
+  const { weekStart, today, selected, events, onSelectDay, onCreateAt, onOpenLecture } = props;
   const scrollRef = useRef<HTMLDivElement>(null);
 
   const allDays = Array.from({ length: 7 }, (_, i) => addDays(weekStart, i));
@@ -157,6 +159,7 @@ export function WeekGrid(props: WeekGridProps) {
                     onClick={(ev) => {
                       ev.stopPropagation();
                       onSelectDay(day);
+                      if (p.event.lectureId) onOpenLecture(p.event.lectureId);
                     }}
                     title={`${p.event.start} ${p.event.title}`}
                     className={`absolute overflow-hidden rounded-md px-1 py-0.5 text-left text-[10px] leading-tight shadow-sm ${CATEGORY_STYLE[p.event.category].chip}`}

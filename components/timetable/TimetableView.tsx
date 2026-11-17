@@ -7,12 +7,19 @@ import { readJSON, writeJSON } from "@/lib/storage";
 import { addDays, addMonths, formatDay, startOfWeek, todayInLisbon } from "@/lib/timetable/dates";
 import { eventsBetween, filterByCategory } from "@/lib/timetable/schedule";
 import { suggestTerm } from "@/lib/timetable/terms";
-import type { EventCategory, NewEvent, NewLecture, TimetableData } from "@/types/timetable";
+import type {
+  EventCategory,
+  LecturePatch,
+  NewEvent,
+  NewLecture,
+  TimetableData,
+} from "@/types/timetable";
 import { AddDialog, type AddDraft } from "./AddDialog";
 import { CategoryFilter } from "./CategoryFilter";
 import { EventRow } from "./EventRow";
 import { CalendarHeader, type CalendarView } from "./CalendarHeader";
 import { DayList } from "./DayList";
+import { LectureDetailSheet } from "./LectureDetailSheet";
 import { ManagePanel } from "./ManagePanel";
 import { MonthGrid, monthGridStart } from "./MonthGrid";
 import { WeekGrid } from "./WeekGrid";
@@ -33,6 +40,8 @@ export function TimetableView() {
   const [tab, setTab] = useState<Tab>("schedule");
   /** Open "add" sheet (null = closed). */
   const [draft, setDraft] = useState<AddDraft | null>(null);
+  /** Lecture whose detail sheet is open (null = closed). */
+  const [openLectureId, setOpenLectureId] = useState<string | null>(null);
 
   // Load after hydration: the data lives in this browser only.
   useEffect(() => {
@@ -115,7 +124,11 @@ export function TimetableView() {
     onRemoveCalendar: async (id: string) => setData(await timetableService.removeCalendar(id)),
     onAddEvent: async (event: NewEvent) => setData(await timetableService.addEvent(event)),
     onRemoveEvent: async (id: string) => setData(await timetableService.removeEvent(id)),
+    onUpdateLecture: async (id: string, patch: LecturePatch) =>
+      setData(await timetableService.updateLecture(id, patch)),
   };
+
+  const openLecture = openLectureId ? data.lectures.find((l) => l.id === openLectureId) : undefined;
 
   const isEmpty =
     data.lectures.length === 0 && data.calendars.length === 0 && data.events.length === 0;
@@ -200,6 +213,7 @@ export function TimetableView() {
               events={periodEvents}
               onSelectDay={setSelected}
               onCreateAt={(date, hour) => setDraft({ date, hour })}
+              onOpenLecture={setOpenLectureId}
             />
           ) : (
             <MonthGrid
@@ -215,12 +229,23 @@ export function TimetableView() {
             today={today}
             events={periodEvents.filter((e) => e.date === selected)}
             onRemove={handlers.onRemoveEvent}
+            onOpenLecture={setOpenLectureId}
           />
           <p className="text-muted mt-5 text-xs">
             Your timetable is stored on this device only. Lectures follow the Nova SBE academic
             calendar 2026/27 and are skipped on Portuguese public holidays.
           </p>
         </>
+      )}
+
+      {openLecture && (
+        <LectureDetailSheet
+          key={openLecture.id}
+          lecture={openLecture}
+          onClose={() => setOpenLectureId(null)}
+          onSave={handlers.onUpdateLecture}
+          onDelete={handlers.onRemoveLecture}
+        />
       )}
 
       {draft && (

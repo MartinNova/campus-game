@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { Button } from "@/components/ui/Button";
 import { WEEKDAYS } from "@/lib/timetable/dates";
+import { normalizeUrl } from "@/lib/timetable/links";
 import { NOVA_TERMS } from "@/lib/timetable/terms";
 import type { NewLecture } from "@/types/timetable";
 
@@ -40,6 +41,15 @@ export function LectureForm({
       location: String(f.get("location")).trim() || undefined,
       termId: String(f.get("termId")),
     };
+    const moodleInput = String(f.get("moodleUrl") ?? "").trim();
+    if (moodleInput) {
+      const url = normalizeUrl(moodleInput);
+      if (!url) {
+        setError("Moodle link must be a web address, e.g. https://moodle.novasbe.pt/…");
+        return;
+      }
+      lecture.moodleUrl = url;
+    }
     if (lecture.end <= lecture.start) {
       setError("End time must be after start time.");
       return;
@@ -80,6 +90,17 @@ export function LectureForm({
       <label className="block text-sm">
         <span className="mb-1 block font-medium">Room (optional)</span>
         <input name="location" placeholder="e.g. B-201" className={INPUT} />
+      </label>
+
+      <label className="block text-sm">
+        <span className="mb-1 block font-medium">Moodle link (optional)</span>
+        <input
+          name="moodleUrl"
+          type="url"
+          inputMode="url"
+          placeholder="https://moodle.novasbe.pt/course/view.php?id=…"
+          className={INPUT}
+        />
       </label>
 
       <label className="block text-sm">
