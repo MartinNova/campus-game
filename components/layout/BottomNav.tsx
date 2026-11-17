@@ -14,8 +14,8 @@ export function BottomNav() {
       className="border-border bg-surface/95 fixed inset-x-0 bottom-0 z-20 border-t pb-[env(safe-area-inset-bottom)] backdrop-blur"
     >
       <ul className="mx-auto flex max-w-2xl">
-        {MAIN_NAV.map(({ href, label, icon: Icon, status }) => {
-          const active = isActive(pathname, href);
+        {MAIN_NAV.map(({ href, label, icon: Icon, status, alsoActiveFor }) => {
+          const active = isActive(pathname, href, alsoActiveFor);
           return (
             <li key={href} className="flex-1">
               <Link
