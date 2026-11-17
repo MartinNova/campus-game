@@ -1,6 +1,6 @@
 "use client";
 
-import { ChevronLeft, ChevronRight } from "lucide-react";
+import { ChevronLeft, ChevronRight, Plus } from "lucide-react";
 import { Button } from "@/components/ui/Button";
 
 export type CalendarView = "week" | "month";
@@ -13,6 +13,7 @@ interface CalendarHeaderProps {
   onPrev: () => void;
   onNext: () => void;
   onToday: () => void;
+  onAdd: () => void;
 }
 
 /** Period title with prev/next arrows, a "Today" button and the Week/Month switch. */
@@ -64,6 +65,10 @@ export function CalendarHeader(props: CalendarHeaderProps) {
           className="h-9"
         >
           Today
+        </Button>
+        <Button onClick={props.onAdd} aria-label="Add to timetable" className="h-9 px-3">
+          <Plus className="size-4" aria-hidden />
+          Add
         </Button>
       </div>
     </div>

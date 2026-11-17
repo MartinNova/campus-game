@@ -1,3 +1,4 @@
+import { Trash2 } from "lucide-react";
 import { formatDay } from "@/lib/timetable/dates";
 import type { TimetableEvent } from "@/types/timetable";
 import { EventRow } from "./EventRow";
@@ -7,10 +8,13 @@ export function DayList({
   date,
   today,
   events,
+  onRemove,
 }: {
   date: string;
   today: string;
   events: TimetableEvent[];
+  /** Called for events the user added by hand (ids start with "event:"). */
+  onRemove?: (id: string) => void;
 }) {
   return (
     <section aria-label="Selected day" className="mt-4">
@@ -22,9 +26,25 @@ export function DayList({
         <p className="text-muted text-sm">Nothing scheduled.</p>
       ) : (
         <ul className="space-y-1.5">
-          {events.map((event) => (
-            <EventRow key={event.id} event={event} />
-          ))}
+          {events.map((event) =>
+            onRemove && event.id.startsWith("event:") ? (
+              <div key={event.id} className="flex items-center gap-1">
+                <ul className="min-w-0 flex-1">
+                  <EventRow event={event} />
+                </ul>
+                <button
+                  type="button"
+                  onClick={() => onRemove(event.id)}
+                  aria-label={`Delete ${event.title}`}
+                  className="text-muted rounded-lg p-2 hover:bg-red-500/10 hover:text-red-600"
+                >
+                  <Trash2 className="size-4" aria-hidden />
+                </button>
+              </div>
+            ) : (
+              <EventRow key={event.id} event={event} />
+            ),
+          )}
         </ul>
       )}
     </section>

@@ -11,11 +11,21 @@ const INPUT =
 
 interface LectureFormProps {
   defaultTermId: string;
+  /** Optional pre-fill, e.g. when tapping a slot in the week grid. */
+  defaultWeekday?: number;
+  defaultStart?: string;
+  defaultEnd?: string;
   onSubmit: (lecture: NewLecture) => Promise<void>;
 }
 
 /** Add a weekly lecture. It repeats every week of the chosen term. */
-export function LectureForm({ defaultTermId, onSubmit }: LectureFormProps) {
+export function LectureForm({
+  defaultTermId,
+  defaultWeekday = 1,
+  defaultStart = "09:30",
+  defaultEnd = "11:00",
+  onSubmit,
+}: LectureFormProps) {
   const [error, setError] = useState<string | null>(null);
 
   async function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
@@ -49,7 +59,7 @@ export function LectureForm({ defaultTermId, onSubmit }: LectureFormProps) {
       <div className="grid grid-cols-3 gap-2">
         <label className="block text-sm">
           <span className="mb-1 block font-medium">Day</span>
-          <select name="weekday" defaultValue="1" className={INPUT}>
+          <select name="weekday" defaultValue={String(defaultWeekday)} className={INPUT}>
             {WEEKDAYS.map((day, i) => (
               <option key={day} value={i + 1}>
                 {day}
@@ -59,11 +69,11 @@ export function LectureForm({ defaultTermId, onSubmit }: LectureFormProps) {
         </label>
         <label className="block text-sm">
           <span className="mb-1 block font-medium">From</span>
-          <input name="start" type="time" required defaultValue="09:30" className={INPUT} />
+          <input name="start" type="time" required defaultValue={defaultStart} className={INPUT} />
         </label>
         <label className="block text-sm">
           <span className="mb-1 block font-medium">To</span>
-          <input name="end" type="time" required defaultValue="11:00" className={INPUT} />
+          <input name="end" type="time" required defaultValue={defaultEnd} className={INPUT} />
         </label>
       </div>
 

@@ -7,7 +7,8 @@ import { readJSON, writeJSON } from "@/lib/storage";
 import { addDays, addMonths, formatDay, startOfWeek, todayInLisbon } from "@/lib/timetable/dates";
 import { eventsBetween, filterByCategory } from "@/lib/timetable/schedule";
 import { suggestTerm } from "@/lib/timetable/terms";
-import type { EventCategory, NewLecture, TimetableData } from "@/types/timetable";
+import type { EventCategory, NewEvent, NewLecture, TimetableData } from "@/types/timetable";
+import { AddDialog, type AddDraft } from "./AddDialog";
 import { CategoryFilter } from "./CategoryFilter";
 import { EventRow } from "./EventRow";
 import { CalendarHeader, type CalendarView } from "./CalendarHeader";
@@ -30,6 +31,8 @@ export function TimetableView() {
   const [view, setView] = useState<CalendarView>("week");
   const [visible, setVisible] = useState<EventCategory[]>(ALL);
   const [tab, setTab] = useState<Tab>("schedule");
+  /** Open "add" sheet (null = closed). */
+  const [draft, setDraft] = useState<AddDraft | null>(null);
 
   // Load after hydration: the data lives in this browser only.
   useEffect(() => {
@@ -110,9 +113,12 @@ export function TimetableView() {
     onImport: async (name: string, category: "exam" | "deadline", text: string) =>
       setData(await timetableService.importCalendar(name, category, text)),
     onRemoveCalendar: async (id: string) => setData(await timetableService.removeCalendar(id)),
+    onAddEvent: async (event: NewEvent) => setData(await timetableService.addEvent(event)),
+    onRemoveEvent: async (id: string) => setData(await timetableService.removeEvent(id)),
   };
 
-  const isEmpty = data.lectures.length === 0 && data.calendars.length === 0;
+  const isEmpty =
+    data.lectures.length === 0 && data.calendars.length === 0 && data.events.length === 0;
 
   return (
     <>
@@ -141,7 +147,8 @@ export function TimetableView() {
             <Card className="mb-4 text-sm">
               <p className="font-semibold">Set up your timetable</p>
               <p className="text-muted mt-1">
-                Add your lectures once and upload your exam and Moodle calendar files under{" "}
+                Tap <strong>Add</strong> or an empty slot in the week view to add lectures and
+                events. Upload your exam and Moodle calendar files under{" "}
                 <button
                   type="button"
                   onClick={() => setTab("manage")}
@@ -183,6 +190,7 @@ export function TimetableView() {
             onPrev={() => step(-1)}
             onNext={() => step(1)}
             onToday={() => setSelected(today)}
+            onAdd={() => setDraft({ date: selected })}
           />
           {view === "week" ? (
             <WeekGrid
@@ -191,6 +199,7 @@ export function TimetableView() {
               selected={selected}
               events={periodEvents}
               onSelectDay={setSelected}
+              onCreateAt={(date, hour) => setDraft({ date, hour })}
             />
           ) : (
             <MonthGrid
@@ -205,12 +214,23 @@ export function TimetableView() {
             date={selected}
             today={today}
             events={periodEvents.filter((e) => e.date === selected)}
+            onRemove={handlers.onRemoveEvent}
           />
           <p className="text-muted mt-5 text-xs">
             Your timetable is stored on this device only. Lectures follow the Nova SBE academic
             calendar 2026/27 and are skipped on Portuguese public holidays.
           </p>
         </>
+      )}
+
+      {draft && (
+        <AddDialog
+          draft={draft}
+          defaultTermId={suggestTerm(draft.date).id}
+          onClose={() => setDraft(null)}
+          onAddEvent={handlers.onAddEvent}
+          onAddLecture={handlers.onAddLecture}
+        />
       )}
     </>
   );
