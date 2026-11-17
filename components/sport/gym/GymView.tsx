@@ -8,6 +8,7 @@ import {
   WEEKDAYS,
   WEEKDAY_LABELS,
   hourlyForecast,
+  roughPercent,
   simulateOccupancy,
   weekdayOf,
 } from "@/lib/gym/occupancy";
@@ -25,6 +26,8 @@ const LEVEL_STYLE: Record<OccupancyLevel, { bar: string; label: string; text: st
 export function GymView({ gym }: { gym: GymLocation }) {
   // The current time is only read in the browser (not during server rendering).
   const [now, setNow] = useState<Date | null>(null);
+  // Hour picked in the day chart. null = the current hour.
+  const [pickedHour, setPickedHour] = useState<number | null>(null);
   useEffect(() => {
     const tick = () => setNow(new Date());
     const first = setTimeout(tick, 0);
@@ -49,6 +52,9 @@ export function GymView({ gym }: { gym: GymLocation }) {
   }
 
   const today = weekdayOf(now);
+  // Selected hour: the picked one, otherwise the current hour, otherwise the first open hour.
+  const shownHour = pickedHour ?? now.getHours();
+  const shown = forecast.find((f) => f.hour === shownHour) ?? forecast[0];
   const style = reading ? LEVEL_STYLE[reading.level] : null;
   const todayHours = gym.openingHours[today];
 
@@ -90,7 +96,7 @@ export function GymView({ gym }: { gym: GymLocation }) {
             </div>
             <p className="text-muted mt-2 flex items-center gap-1.5 text-sm">
               <Users className="size-4" aria-hidden />
-              {reading.percent}% full, about {reading.people} of {gym.capacity} people
+              About {roughPercent(reading.percent)}% full
             </p>
           </div>
         ) : (
@@ -102,30 +108,45 @@ export function GymView({ gym }: { gym: GymLocation }) {
 
       <Card className="mt-4">
         <h2 className="font-semibold">Today by hour</h2>
-        <p className="text-muted text-sm">Typical busy times. The current hour is outlined.</p>
-        <div className="mt-4 flex h-32 items-end gap-1" role="list" aria-label="Occupancy by hour">
+        <p className="text-muted text-sm">Tap an hour to see how busy it usually is.</p>
+        <div className="mt-4 flex h-32 items-end gap-1" role="group" aria-label="Occupancy by hour">
           {forecast.map(({ hour, reading: r }) => {
-            const current = hour === now.getHours();
+            const selected = hour === shown?.hour;
             return (
-              <div
+              <button
                 key={hour}
-                role="listitem"
-                aria-label={`${hour}:00, ${LEVEL_STYLE[r.level].label}, ${r.percent} percent`}
-                className="flex h-full flex-1 flex-col items-center justify-end gap-1"
+                type="button"
+                aria-pressed={selected}
+                aria-label={`${hour}:00, ${LEVEL_STYLE[r.level].label}, about ${roughPercent(r.percent)} percent`}
+                onClick={() => setPickedHour(hour)}
+                className="focus-visible:outline-brand flex h-full flex-1 flex-col items-center justify-end gap-1 focus-visible:outline-2"
               >
                 <div
                   className={`w-full rounded-t ${LEVEL_STYLE[r.level].bar} ${
-                    current ? "outline-foreground outline-2 outline-offset-1" : ""
+                    selected ? "outline-foreground outline-2 outline-offset-1" : ""
                   }`}
                   style={{ height: `${r.percent}%` }}
                 />
-                <span className={`text-[10px] ${current ? "font-bold" : "text-muted"}`}>
+                <span className={`text-[10px] ${selected ? "font-bold" : "text-muted"}`}>
                   {hour}
                 </span>
-              </div>
+              </button>
             );
           })}
         </div>
+        {shown && (
+          <p className="mt-3 flex items-center gap-2 text-sm" aria-live="polite">
+            <span
+              className={`size-3 rounded-full ${LEVEL_STYLE[shown.reading.level].bar}`}
+              aria-hidden
+            />
+            <span className="font-semibold">
+              {shown.hour}:00 to {shown.hour + 1}:00
+            </span>
+            {LEVEL_STYLE[shown.reading.level].label}, about {roughPercent(shown.reading.percent)}%
+            full
+          </p>
+        )}
         <ul className="text-muted mt-3 flex flex-wrap gap-x-4 gap-y-1 text-xs">
           {(["low", "medium", "high"] as const).map((level) => (
             <li key={level} className="flex items-center gap-1.5">

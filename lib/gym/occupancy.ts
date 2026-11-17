@@ -51,6 +51,11 @@ export function levelFor(percent: number): OccupancyLevel {
   return "high";
 }
 
+/** Rounds to the nearest 5, so the app shows only an approximate value. */
+export function roughPercent(percent: number): number {
+  return Math.round(percent / 5) * 5;
+}
+
 /** Small stable pseudo-random number in [0, 1) from a string. */
 function hash01(text: string): number {
   let h = 2166136261;
@@ -82,7 +87,7 @@ export function simulateOccupancy(gym: GymLocation, at: Date): OccupancyReading 
   const noise = (hash01(slot) - 0.5) * 16;
 
   const percent = Math.round(Math.min(100, Math.max(3, base + noise)));
-  return { percent, level: levelFor(percent), people: Math.round((percent / 100) * gym.capacity) };
+  return { percent, level: levelFor(percent) };
 }
 
 /** Expected occupancy for each open hour of a day (full hours), for the day chart. */

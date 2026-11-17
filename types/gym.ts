@@ -23,8 +23,6 @@ export interface GymLocation {
   /** Link to the gym's official group class schedule (not copied into the app). */
   scheduleUrl: string;
   openingHours: Record<Weekday, DayHours>;
-  /** Rough number of people that fit in the gym at once (used by the simulation). */
-  capacity: number;
 }
 
 /** green = quiet, yellow = moderate, red = busy */
@@ -34,6 +32,4 @@ export interface OccupancyReading {
   /** 0 to 100 */
   percent: number;
   level: OccupancyLevel;
-  /** Estimated number of people in the gym. */
-  people: number;
 }

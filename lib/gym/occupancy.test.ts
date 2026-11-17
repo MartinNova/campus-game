@@ -1,6 +1,13 @@
 import { describe, expect, it } from "vitest";
 import { VIVA_GYM } from "@/data/viva-gym";
-import { hourlyForecast, isOpenAt, levelFor, simulateOccupancy, weekdayOf } from "./occupancy";
+import {
+  hourlyForecast,
+  isOpenAt,
+  levelFor,
+  roughPercent,
+  simulateOccupancy,
+  weekdayOf,
+} from "./occupancy";
 
 // 2026-11-17 is a Tuesday, 2026-11-21 a Saturday.
 const at = (y: number, m: number, d: number, h: number, min = 0) => new Date(y, m - 1, d, h, min);
@@ -12,6 +19,14 @@ describe("levelFor", () => {
     expect(levelFor(35)).toBe("medium");
     expect(levelFor(64)).toBe("medium");
     expect(levelFor(65)).toBe("high");
+  });
+});
+
+describe("roughPercent", () => {
+  it("rounds to the nearest 5", () => {
+    expect(roughPercent(62)).toBe(60);
+    expect(roughPercent(63)).toBe(65);
+    expect(roughPercent(3)).toBe(5);
   });
 });
 
@@ -38,13 +53,12 @@ describe("simulateOccupancy", () => {
     expect(a?.percent).toBeGreaterThan(0);
     expect(a?.percent).toBe(b?.percent);
   });
-  it("stays between 0 and 100 and estimates people from capacity", () => {
+  it("stays between 0 and 100", () => {
     for (let h = 6; h < 23; h++) {
       const r = simulateOccupancy(VIVA_GYM, at(2026, 11, 17, h, 15));
       expect(r).not.toBeNull();
       expect(r!.percent).toBeGreaterThanOrEqual(3);
       expect(r!.percent).toBeLessThanOrEqual(100);
-      expect(r!.people).toBe(Math.round((r!.percent / 100) * VIVA_GYM.capacity));
     }
   });
   it("is busier in the evening than late morning on weekdays", () => {

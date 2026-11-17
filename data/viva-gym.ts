@@ -21,5 +21,4 @@ export const VIVA_GYM: GymLocation = {
     sat: { open: "08:00", close: "21:00" },
     sun: { open: "08:00", close: "21:00" },
   },
-  capacity: 120,
 };
