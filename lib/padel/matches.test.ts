@@ -19,10 +19,17 @@ const match = (overrides: Partial<PadelMatch> = {}): PadelMatch => ({
   ...overrides,
 });
 
-const newMatch = (overrides: Partial<NewPadelMatch> = {}): NewPadelMatch => {
-  const { id: _id, playerIds: _p, createdBy: _c, createdAt: _t, ...rest } = match();
-  return { ...rest, ...overrides };
-};
+const newMatch = (overrides: Partial<NewPadelMatch> = {}): NewPadelMatch => ({
+  date: "2026-11-20",
+  time: "18:30",
+  durationMinutes: 90,
+  location: "Padel CIF",
+  level: 2.5,
+  maxPlayers: 4,
+  guestCount: 0,
+  description: "",
+  ...overrides,
+});
 
 describe("levels", () => {
   it("finds the band for a value", () => {
