@@ -9,7 +9,7 @@ export default function FriendProfilePage() {
   return (
     <>
       <PageHeader title="Profile" backHref="/friends" />
-      {/* The username comes from the URL and is read in the browser. */}
+      {/* The username comes from ?u=... and is read in the browser. */}
       <Suspense fallback={<div className="bg-border h-64 animate-pulse rounded-2xl" />}>
         <FriendProfileView />
       </Suspense>

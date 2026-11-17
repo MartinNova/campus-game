@@ -2,7 +2,7 @@
 
 import { AtSign, Briefcase, Trophy } from "lucide-react";
 import Link from "next/link";
-import { useParams } from "next/navigation";
+import { useSearchParams } from "next/navigation";
 import { useEffect, useState } from "react";
 import { ProfileCard } from "@/components/profile/ProfileCard";
 import { useCurrentUser } from "@/components/providers/CurrentUserProvider";
@@ -17,7 +17,7 @@ const linkClass =
 
 /** Another student's profile with ways to get in touch. */
 export function FriendProfileView() {
-  const { username } = useParams<{ username: string }>();
+  const username = useSearchParams().get("u") ?? "";
   const { user, ready } = useCurrentUser();
   const userId = user?.id;
   const [loaded, setLoaded] = useState<Loaded | null>(null);

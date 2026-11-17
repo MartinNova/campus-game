@@ -81,7 +81,7 @@ export function MatchCard({
               <li key={id}>
                 {user?.username ? (
                   <Link
-                    href={`/friends/${user.username}`}
+                    href={`/friends/profile?u=${user.username}`}
                     className="hover:text-brand flex items-center gap-1.5"
                   >
                     {content}

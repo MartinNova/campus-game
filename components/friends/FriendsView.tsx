@@ -141,7 +141,7 @@ export function FriendsView() {
           {shown.map((p) => (
             <li key={p.userId}>
               <Link
-                href={`/friends/${p.username}`}
+                href={`/friends/profile?u=${p.username}`}
                 className="border-border bg-surface hover:border-brand flex items-center gap-3 rounded-2xl border p-3 shadow-sm transition-colors"
               >
                 <Avatar
