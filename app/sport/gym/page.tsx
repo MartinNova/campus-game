@@ -10,7 +10,7 @@ import { VIVA_GYM } from "@/data/viva-gym";
 
 export const metadata: Metadata = { title: "Gym" };
 
-/** Optional photo of the gym. Put the file at public/images/viva-gym.jpg to show it. */
+/** Photo of the gym. If the file is removed, a dumbbell icon is shown instead. */
 const PHOTO = "/images/viva-gym.jpg";
 const HAS_PHOTO = existsSync(join(process.cwd(), "public", PHOTO));
 
@@ -23,11 +23,11 @@ export default function GymPage() {
         backHref="/sport"
       />
 
-      <div className="bg-brand text-brand-foreground relative mb-4 aspect-[16/9] overflow-hidden rounded-2xl">
+      <div className="bg-brand text-brand-foreground relative mb-4 aspect-[4/3] overflow-hidden rounded-2xl sm:aspect-[16/9]">
         {HAS_PHOTO ? (
           <Image
             src={PHOTO}
-            alt="Inside the Viva Gym on the Nova SBE campus."
+            alt="Glass entrance of the Viva Gym with an orange Vivagym sign and a woman with a gym bag walking past."
             fill
             sizes="(max-width: 768px) 100vw, 768px"
             preload
