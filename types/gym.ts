@@ -20,6 +20,8 @@ export interface GymLocation {
   address: string;
   /** Link to the gym's own website. */
   website: string;
+  /** Link to the gym's official group class schedule (not copied into the app). */
+  scheduleUrl: string;
   openingHours: Record<Weekday, DayHours>;
   /** Rough number of people that fit in the gym at once (used by the simulation). */
   capacity: number;

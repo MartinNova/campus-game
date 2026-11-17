@@ -10,6 +10,8 @@ export const VIVA_GYM: GymLocation = {
   name: "Viva Gym Carcavelos",
   address: "Campus de Carcavelos, R. da Holanda 1, 2775-405 Carcavelos",
   website: "https://www.vivagym.pt",
+  scheduleUrl:
+    "https://www.vivagym.com/pt-pt/ginasios/lisboa/lisboa-linha-cascais/clube-carcavelos/activity-calendar/",
   openingHours: {
     mon: { open: "06:00", close: "23:00" },
     tue: { open: "06:00", close: "23:00" },

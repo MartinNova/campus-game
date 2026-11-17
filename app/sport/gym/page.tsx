@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import { existsSync } from "node:fs";
 import { join } from "node:path";
 import Image from "next/image";
-import { ArrowUpRight, Dumbbell, MapPin } from "lucide-react";
+import { ArrowUpRight, CalendarDays, Dumbbell, MapPin } from "lucide-react";
 import { GymView } from "@/components/sport/gym/GymView";
 import { Card } from "@/components/ui/Card";
 import { PageHeader } from "@/components/ui/PageHeader";
@@ -53,6 +53,26 @@ export default function GymPage() {
           className="bg-brand text-brand-foreground focus-visible:outline-brand mt-4 inline-flex min-h-11 w-full items-center justify-center gap-2 rounded-xl px-6 py-2.5 text-sm font-semibold transition hover:opacity-90 focus-visible:outline-2 focus-visible:outline-offset-2 sm:w-auto"
         >
           Viva Gym website
+          <ArrowUpRight className="size-4" aria-hidden />
+          <span className="sr-only">(opens in a new tab)</span>
+        </a>
+      </Card>
+
+      <Card className="mb-4">
+        <h2 className="flex items-center gap-1.5 font-semibold">
+          <CalendarDays className="size-4" aria-hidden /> Class schedule
+        </h2>
+        <p className="text-muted mt-1 text-sm">
+          Cycling, Pilates, Yoga, Zumba, a Run Club and more. The schedule changes weekly, so the
+          official page always has the current times.
+        </p>
+        <a
+          href={VIVA_GYM.scheduleUrl}
+          target="_blank"
+          rel="noopener noreferrer"
+          className="bg-brand text-brand-foreground focus-visible:outline-brand mt-4 inline-flex min-h-11 w-full items-center justify-center gap-2 rounded-xl px-6 py-2.5 text-sm font-semibold transition hover:opacity-90 focus-visible:outline-2 focus-visible:outline-offset-2 sm:w-auto"
+        >
+          View the class schedule
           <ArrowUpRight className="size-4" aria-hidden />
           <span className="sr-only">(opens in a new tab)</span>
         </a>
