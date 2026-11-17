@@ -52,7 +52,7 @@ export const SPORT_MODULES: SubModule[] = [
     label: "Surf",
     description: "3-day wave and wind forecast for spots near Lisbon.",
     icon: Waves,
-    status: "soon",
+    status: "live",
     branch: "feature/surf",
   },
   {
