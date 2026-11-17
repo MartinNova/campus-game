@@ -9,7 +9,7 @@ export default function GettingHerePage() {
     <>
       <PageHeader
         title="Getting to campus"
-        subtitle="Map, Uber and the next trains from Carcavelos and Oeiras."
+        subtitle="Your train after class, Uber, the map and the next trains."
         backHref="/campus"
       />
       <GettingThereView />
