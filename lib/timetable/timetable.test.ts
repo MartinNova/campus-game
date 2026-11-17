@@ -1,9 +1,9 @@
 import { describe, expect, it } from "vitest";
 import type { Lecture } from "@/types/timetable";
-import { addDays, startOfWeek, weekday } from "./dates";
+import { addDays, addMonths, startOfMonth, startOfWeek, weekday } from "./dates";
 import { easterSunday, portugueseHolidays } from "./holidays";
 import { parseIcs, parseIcsDate } from "./ics";
-import { eventsBetween, expandLecture, filterByCategory } from "./schedule";
+import { eventsBetween, expandLecture, filterByCategory, layoutTimedEvents } from "./schedule";
 import { suggestTerm } from "./terms";
 
 describe("dates", () => {
@@ -127,5 +127,34 @@ describe("filterByCategory", () => {
     const events = eventsBetween({ lectures: [], calendars: [] }, "2026-12-01", "2026-12-31");
     expect(filterByCategory(events, ["exam"])).toEqual([]);
     expect(filterByCategory(events, ["holiday"]).length).toBe(3); // 1, 8, 25 Dec
+  });
+});
+
+describe("calendar helpers", () => {
+  it("adds months and clamps the day", () => {
+    expect(addMonths("2027-01-31", 1)).toBe("2027-02-28");
+    expect(addMonths("2026-11-17", -1)).toBe("2026-10-17");
+    expect(startOfMonth("2026-11-17")).toBe("2026-11-01");
+  });
+
+  it("puts overlapping events side by side", () => {
+    const ev = (id: string, start: string, end?: string) => ({
+      id,
+      title: id,
+      date: "2026-11-17",
+      start,
+      end,
+      category: "lecture" as const,
+    });
+    const placed = layoutTimedEvents([
+      ev("a", "09:00", "10:30"),
+      ev("b", "10:00", "11:00"),
+      ev("c", "11:00", "12:00"),
+      ev("d", "23:59"), // deadline without end
+    ]);
+    const byId = Object.fromEntries(placed.map((p) => [p.event.id, p]));
+    expect([byId.a.lane, byId.b.lane, byId.a.laneCount]).toEqual([0, 1, 2]);
+    expect([byId.c.lane, byId.c.laneCount]).toEqual([0, 1]);
+    expect(byId.d.endMin - byId.d.startMin).toBe(30);
   });
 });

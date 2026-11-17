@@ -1,5 +1,5 @@
 import type { EventCategory, Lecture, TimetableData, TimetableEvent } from "@/types/timetable";
-import { addDays, weekday } from "./dates";
+import { addDays, toMinutes, weekday } from "./dates";
 import { holidaysBetween } from "./holidays";
 import { getTerm } from "./terms";
 
@@ -57,4 +57,61 @@ export function filterByCategory(
   visible: EventCategory[],
 ): TimetableEvent[] {
   return events.filter((e) => visible.includes(e.category));
+}
+
+export interface PositionedEvent {
+  event: TimetableEvent;
+  startMin: number;
+  endMin: number;
+  /** Column inside the day when events overlap (0-based). */
+  lane: number;
+  /** Number of columns needed by the group of overlapping events. */
+  laneCount: number;
+}
+
+/**
+ * Places timed events of one day side by side when they overlap (like Google Calendar).
+ * Events without an end time (e.g. Moodle deadlines) get `defaultDuration` minutes.
+ */
+export function layoutTimedEvents(
+  events: TimetableEvent[],
+  defaultDuration = 30,
+): PositionedEvent[] {
+  const items = events
+    .filter((e) => e.start)
+    .map((event) => {
+      const startMin = toMinutes(event.start!);
+      const endMin = event.end ? toMinutes(event.end) : startMin + defaultDuration;
+      return { event, startMin, endMin: Math.max(endMin, startMin + 15) };
+    })
+    .sort((a, b) => a.startMin - b.startMin || b.endMin - a.endMin);
+
+  const result: PositionedEvent[] = [];
+  let group: PositionedEvent[] = [];
+  let laneEnds: number[] = [];
+  let groupEnd = -1;
+
+  const closeGroup = () => {
+    for (const p of group) p.laneCount = laneEnds.length;
+    group = [];
+    laneEnds = [];
+    groupEnd = -1;
+  };
+
+  for (const item of items) {
+    if (group.length > 0 && item.startMin >= groupEnd) closeGroup();
+    let lane = laneEnds.findIndex((end) => end <= item.startMin);
+    if (lane === -1) {
+      lane = laneEnds.length;
+      laneEnds.push(item.endMin);
+    } else {
+      laneEnds[lane] = item.endMin;
+    }
+    const positioned = { ...item, lane, laneCount: 1 };
+    group.push(positioned);
+    result.push(positioned);
+    groupEnd = Math.max(groupEnd, item.endMin);
+  }
+  closeGroup();
+  return result;
 }

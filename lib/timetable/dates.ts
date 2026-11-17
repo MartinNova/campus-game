@@ -39,3 +39,24 @@ export const WEEKDAYS = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"];
 export function formatDay(iso: string, options: Intl.DateTimeFormatOptions): string {
   return toDate(iso).toLocaleDateString("en-GB", { timeZone: "UTC", ...options });
 }
+
+/** Same day-of-month `months` later (clamped to the month's last day). */
+export function addMonths(iso: string, months: number): string {
+  const d = toDate(iso);
+  const day = d.getUTCDate();
+  d.setUTCDate(1);
+  d.setUTCMonth(d.getUTCMonth() + months);
+  const lastDay = new Date(Date.UTC(d.getUTCFullYear(), d.getUTCMonth() + 1, 0)).getUTCDate();
+  d.setUTCDate(Math.min(day, lastDay));
+  return toIso(d);
+}
+
+export function startOfMonth(iso: string): string {
+  return `${iso.slice(0, 7)}-01`;
+}
+
+/** "09:30" -> 570 */
+export function toMinutes(time: string): number {
+  const [h, m] = time.split(":").map(Number);
+  return h * 60 + m;
+}
