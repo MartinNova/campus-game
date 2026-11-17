@@ -1,11 +1,11 @@
 "use client";
 
-import { ExternalLink } from "lucide-react";
 import { useState } from "react";
 import { Button } from "@/components/ui/Button";
 import { Card } from "@/components/ui/Card";
 import { PADEL_CLUBS, playtomicUrlFor } from "@/lib/padel/clubs";
 import { MAX_PADEL_PLAYERS, PADEL_LEVELS, getLevelBand, type NewPadelMatch } from "@/types/padel";
+import { PlaytomicLink } from "./PlaytomicLink";
 
 const OTHER = "__other";
 const DURATIONS = [60, 90, 120];
@@ -114,15 +114,12 @@ export function NewMatchForm({ initialDate, minDate, onSubmit, onClose }: NewMat
             />
           </label>
         )}
-        <a
+        <PlaytomicLink
           href={playtomicUrlFor(location)}
-          target="_blank"
-          rel="noreferrer"
           className="text-brand -mt-2 inline-flex items-center gap-1 text-sm underline"
         >
-          Not booked yet? Book this court on Playtomic{" "}
-          <ExternalLink className="size-3.5" aria-hidden />
-        </a>
+          Not booked yet? Book this court on Playtomic
+        </PlaytomicLink>
 
         <div className="grid grid-cols-2 gap-3">
           <label className="text-sm font-medium">

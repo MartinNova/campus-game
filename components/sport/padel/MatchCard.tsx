@@ -1,12 +1,13 @@
 "use client";
 
-import { Clock, ExternalLink, MapPin, Users } from "lucide-react";
+import { Clock, MapPin, Users } from "lucide-react";
 import { Badge } from "@/components/ui/Badge";
 import { Button } from "@/components/ui/Button";
 import { Card } from "@/components/ui/Card";
 import { playtomicUrlFor } from "@/lib/padel/clubs";
 import { formatLevel, freeSpots, type PadelMatch } from "@/types/padel";
 import type { User } from "@/types/user";
+import { PlaytomicLink } from "./PlaytomicLink";
 
 interface MatchCardProps {
   match: PadelMatch;
@@ -78,14 +79,12 @@ export function MatchCard({
             Join match
           </Button>
         )}
-        <a
+        <PlaytomicLink
           href={playtomicUrlFor(match.location)}
-          target="_blank"
-          rel="noreferrer"
           className="text-muted hover:text-foreground inline-flex h-10 items-center gap-1 px-2 text-sm"
         >
-          Club on Playtomic <ExternalLink className="size-3.5" aria-hidden />
-        </a>
+          Club on Playtomic
+        </PlaytomicLink>
       </div>
     </Card>
   );

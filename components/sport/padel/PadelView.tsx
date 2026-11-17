@@ -1,6 +1,6 @@
 "use client";
 
-import { CalendarPlus, ExternalLink } from "lucide-react";
+import { CalendarPlus } from "lucide-react";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { useCurrentUser } from "@/components/providers/CurrentUserProvider";
 import { Button } from "@/components/ui/Button";
@@ -13,6 +13,7 @@ import { PADEL_LEVELS, type NewPadelMatch, type PadelMatch } from "@/types/padel
 import { DayStrip } from "./DayStrip";
 import { MatchCard } from "./MatchCard";
 import { NewMatchForm } from "./NewMatchForm";
+import { PlaytomicLink } from "./PlaytomicLink";
 
 const DAYS_SHOWN = 14;
 
@@ -90,14 +91,12 @@ export function PadelView() {
           <p className="font-semibold">Need a court?</p>
           <p className="text-muted text-sm">Book in Lisbon on Playtomic, then post it here.</p>
         </div>
-        <a
+        <PlaytomicLink
           href={PLAYTOMIC_LISBON_SEARCH}
-          target="_blank"
-          rel="noreferrer"
           className="bg-brand text-brand-foreground inline-flex h-10 shrink-0 items-center gap-1.5 rounded-xl px-4 text-sm font-medium hover:opacity-90"
         >
-          Book a court <ExternalLink className="size-4" aria-hidden />
-        </a>
+          Book a court
+        </PlaytomicLink>
       </Card>
 
       {showForm ? (
