@@ -1,6 +1,7 @@
 import {
   CalendarDays,
   Dumbbell,
+  Flower2,
   Home,
   Trophy,
   UtensilsCrossed,
@@ -62,6 +63,14 @@ export const SPORT_MODULES: SubModule[] = [
     icon: Dumbbell,
     status: "soon",
     branch: "feature/gym",
+  },
+  {
+    href: "/sport/yoga",
+    label: "Yoga",
+    description: "Yoga classes on campus by Nova MindSpace.",
+    icon: Flower2,
+    status: "live",
+    branch: "feature/yoga",
   },
 ];
 
