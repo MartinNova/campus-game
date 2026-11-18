@@ -167,10 +167,10 @@ export function RoomDetailView() {
             </div>
             {poster.username && (
               <Link
-                href={`/friends/profile?u=${poster.username}`}
+                href={`/friends/chat?u=${poster.username}`}
                 className="bg-brand text-brand-foreground inline-flex h-10 shrink-0 items-center rounded-xl px-4 text-sm font-medium hover:opacity-90"
               >
-                Contact
+                Message
               </Link>
             )}
           </Card>

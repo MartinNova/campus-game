@@ -149,4 +149,5 @@ const BACK_LABELS: Record<string, string> = {
   "/canteen": "Food Options",
   "/campus/rooms": "Rooms & flats",
   "/profile": "Your area",
+  "/friends/messages": "Messages",
 };

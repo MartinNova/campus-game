@@ -1,6 +1,6 @@
 "use client";
 
-import { AtSign, Briefcase, Trophy } from "lucide-react";
+import { AtSign, Briefcase, MessageCircle, Trophy } from "lucide-react";
 import Link from "next/link";
 import { useSearchParams } from "next/navigation";
 import { useEffect, useState } from "react";
@@ -72,6 +72,12 @@ export function FriendProfileView() {
       ) : (
         <Card className="grid gap-3">
           <p className="font-semibold">Get in touch with {p.firstName || `@${p.username}`}</p>
+          <Link
+            href={`/friends/chat?u=${p.username}`}
+            className="bg-brand text-brand-foreground inline-flex h-11 items-center justify-center gap-2 rounded-xl px-4 font-semibold hover:opacity-90"
+          >
+            <MessageCircle className="size-5" aria-hidden /> Message
+          </Link>
           <div className="flex flex-wrap gap-2">
             {p.instagram && (
               <a
@@ -94,11 +100,6 @@ export function FriendProfileView() {
               </Link>
             )}
           </div>
-          {!p.instagram && !p.linkedin && (
-            <p className="text-muted text-sm">
-              No contact links yet. Direct messages are coming next.
-            </p>
-          )}
         </Card>
       )}
     </div>
