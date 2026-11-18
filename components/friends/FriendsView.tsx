@@ -54,7 +54,9 @@ export function FriendsView() {
   if (!user) {
     return (
       <Card className="flex flex-col items-center gap-3 py-10 text-center">
-        <Users className="text-brand size-8" aria-hidden />
+        <span className="bg-brand text-brand-foreground flex size-14 items-center justify-center rounded-2xl">
+          <Users className="size-7" aria-hidden />
+        </span>
         <p className="font-semibold">Meet other Nova students</p>
         <p className="text-muted max-w-xs text-sm">
           Sign in to see who else is on the app and get in touch.
