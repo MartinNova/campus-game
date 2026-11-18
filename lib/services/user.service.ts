@@ -35,9 +35,16 @@ export function parseTeamMembers(raw: string | undefined): User[] {
     });
 }
 
+/** Same default handle as the demo profile ("sofia.almeida"), so links like ?u=... work. */
+const demoUsername = (u: User) =>
+  `${u.firstName}.${u.lastName}`.toLowerCase().replace(/[^a-z0-9_.]/g, "");
+
 function allUsers(): User[] {
   const team = parseTeamMembers(process.env.NEXT_PUBLIC_TEAM_MEMBERS);
-  return [...(team.length > 0 ? team : TEAM_PLACEHOLDERS), ...DEMO_USERS];
+  return [...(team.length > 0 ? team : TEAM_PLACEHOLDERS), ...DEMO_USERS].map((u) => ({
+    ...u,
+    username: u.username ?? demoUsername(u),
+  }));
 }
 
 /** Demo login: mock users, the chosen account is remembered in localStorage. */
