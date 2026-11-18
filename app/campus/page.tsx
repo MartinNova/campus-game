@@ -10,7 +10,7 @@ export default function CampusPage() {
     <>
       <PageHeader
         title="Campus"
-        subtitle="Getting here, library, study rooms, campus map and restaurants."
+        subtitle="Getting here, rooms & flats, library, campus map and restaurants."
       />
       <div className="space-y-6">
         {CAMPUS_LINK_SECTIONS.map((section) => (

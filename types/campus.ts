@@ -4,7 +4,7 @@ export interface CampusLink {
   description: string;
   /** External URL (opens in a new tab) or internal route starting with "/". */
   href: string;
-  icon: "book-search" | "study-room" | "map" | "canteen" | "train";
+  icon: "book-search" | "study-room" | "map" | "canteen" | "train" | "home";
 }
 
 export interface CampusLinkSection {

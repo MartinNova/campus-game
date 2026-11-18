@@ -2,6 +2,7 @@ import {
   ArrowUpRight,
   BookOpenText,
   DoorOpen,
+  House,
   Map,
   TrainFront,
   UtensilsCrossed,
@@ -15,6 +16,7 @@ const ICONS = {
   map: Map,
   canteen: UtensilsCrossed,
   train: TrainFront,
+  home: House,
 } satisfies Record<CampusLink["icon"], unknown>;
 
 const CARD_CLASS =
