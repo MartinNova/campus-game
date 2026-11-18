@@ -66,13 +66,15 @@ describe("openMatches", () => {
 });
 
 describe("dueTodos", () => {
-  const todo = (id: string, dueDate: string | null, status: Todo["status"] = "todo"): Todo => ({
+  const todo = (id: string, dueDate: string | null, done = false): Todo => ({
     id,
     listId: "l",
     title: id,
-    status,
+    columnId: "c",
+    done,
     priority: "normal",
     dueDate,
+    labelIds: [],
     createdAt: "2026-11-01T00:00:00Z",
   });
 
@@ -80,7 +82,7 @@ describe("dueTodos", () => {
     const todos = [
       todo("today", "2026-11-17"),
       todo("late", "2026-11-10"),
-      todo("done", "2026-11-17", "done"),
+      todo("done", "2026-11-17", true),
       todo("later", "2026-11-20"),
       todo("none", null),
     ];

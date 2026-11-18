@@ -39,5 +39,5 @@ export function openMatches(matches: PadelMatch[], time: string): PadelMatch[] {
 
 /** Open to-dos due today or earlier. */
 export function dueTodos(todos: Todo[], today: string): Todo[] {
-  return todos.filter((t) => t.status !== "done" && t.dueDate !== null && t.dueDate <= today);
+  return todos.filter((t) => !t.done && t.dueDate !== null && t.dueDate <= today);
 }
