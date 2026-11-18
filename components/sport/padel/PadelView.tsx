@@ -34,12 +34,19 @@ export function PadelView() {
   const reload = useCallback(() => padelService.listMatches().then(setMatches), []);
   // Load again when someone signs in or out (shared matches need an account).
   useEffect(() => {
-    void padelService.listMatches().then((list) => {
-      const days = upcomingDates(new Date(), DAYS_SHOWN);
-      setDates(days);
-      setSelectedDate((current) => current || days[0]);
-      setMatches(list);
-    });
+    void padelService
+      .listMatches()
+      .catch((err: unknown) => {
+        // Show the problem instead of loading forever.
+        setError(err instanceof Error ? err.message : "Could not load matches.");
+        return [];
+      })
+      .then((list) => {
+        const days = upcomingDates(new Date(), DAYS_SHOWN);
+        setDates(days);
+        setSelectedDate((current) => current || days[0]);
+        setMatches(list);
+      });
   }, [userId]);
   // Live: new matches and players from other devices appear without reloading.
   useEffect(() => padelService.onChange(() => void reload()), [reload]);
@@ -145,7 +152,7 @@ export function PadelView() {
           <select
             value={level ?? ""}
             onChange={(e) => setLevel(e.target.value === "" ? undefined : Number(e.target.value))}
-            className="border-border bg-surface text-foreground h-9 rounded-xl border px-2 text-sm"
+            className="border-border bg-surface text-foreground h-9 max-w-40 rounded-xl border px-2 text-sm"
           >
             <option value="">All levels</option>
             {PADEL_LEVELS.map((band) => (
@@ -177,7 +184,13 @@ export function PadelView() {
               currentUserId={user?.id}
               users={users}
               busy={busyId === m.id}
-              onJoin={() => run(m.id, () => padelService.joinMatch(m.id, user!.id))}
+              onRequest={(note) =>
+                run(m.id, () => padelService.requestToJoin(m.id, user!.id, note))
+              }
+              onWithdraw={() => run(m.id, () => padelService.withdrawRequest(m.id, user!.id))}
+              onRespond={(requestId, accept) =>
+                run(m.id, () => padelService.respondToRequest(m.id, requestId, accept, user!.id))
+              }
               onLeave={() => run(m.id, () => padelService.leaveMatch(m.id, user!.id))}
               onCancel={() => run(m.id, () => padelService.cancelMatch(m.id, user!.id))}
             />

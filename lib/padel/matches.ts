@@ -1,7 +1,9 @@
 import {
   MAX_PADEL_PLAYERS,
+  MAX_REQUEST_NOTE,
   PADEL_LEVELS,
   freeSpots,
+  type JoinRequest,
   type NewPadelMatch,
   type PadelMatch,
   type PadelMatchFilter,
@@ -42,5 +44,75 @@ export function joinMatch(match: PadelMatch, userId: string): PadelMatch {
 export function leaveMatch(match: PadelMatch, userId: string): PadelMatch {
   if (match.createdBy === userId) throw new Error("You posted this match. Cancel it instead.");
   if (!match.playerIds.includes(userId)) throw new Error("You are not in this match.");
-  return { ...match, playerIds: match.playerIds.filter((id) => id !== userId) };
+  return {
+    ...match,
+    playerIds: match.playerIds.filter((id) => id !== userId),
+    // Leaving clears your request, so you could ask again later.
+    requests: (match.requests ?? []).filter((r) => r.userId !== userId),
+  };
+}
+
+/** Your own request for this match, if any. */
+export function myRequest(match: PadelMatch, userId: string): JoinRequest | undefined {
+  return (match.requests ?? []).find((r) => r.userId === userId);
+}
+
+/** Requests the organiser still has to answer, oldest first. */
+export function pendingRequests(match: PadelMatch): JoinRequest[] {
+  return (match.requests ?? [])
+    .filter((r) => r.status === "pending")
+    .sort((a, b) => a.createdAt.localeCompare(b.createdAt));
+}
+
+/** Throws a readable error if `userId` can't ask to join this match. */
+export function checkCanRequest(match: PadelMatch, userId: string, note: string): void {
+  if (match.createdBy === userId) throw new Error("You posted this match.");
+  if (match.playerIds.includes(userId)) throw new Error("You are already playing.");
+  const existing = myRequest(match, userId);
+  if (existing?.status === "pending") throw new Error("You already asked to join.");
+  if (existing?.status === "declined")
+    throw new Error("The organiser said no this time. Try another match.");
+  if (freeSpots(match) === 0) throw new Error("This match is already full.");
+  if (note.trim().length > MAX_REQUEST_NOTE)
+    throw new Error(`The note can have at most ${MAX_REQUEST_NOTE} characters.`);
+}
+
+export function requestToJoin(
+  match: PadelMatch,
+  request: Pick<JoinRequest, "id" | "userId" | "note" | "createdAt">,
+): PadelMatch {
+  checkCanRequest(match, request.userId, request.note);
+  const others = (match.requests ?? []).filter((r) => r.userId !== request.userId);
+  return {
+    ...match,
+    requests: [...others, { ...request, note: request.note.trim(), status: "pending" }],
+  };
+}
+
+export function withdrawRequest(match: PadelMatch, userId: string): PadelMatch {
+  if (myRequest(match, userId)?.status !== "pending")
+    throw new Error("No open request to take back.");
+  return { ...match, requests: (match.requests ?? []).filter((r) => r.userId !== userId) };
+}
+
+/** Organiser accepts (adds the player) or declines a pending request. */
+export function respondToRequest(
+  match: PadelMatch,
+  requestId: string,
+  accept: boolean,
+  userId: string,
+): PadelMatch {
+  if (match.createdBy !== userId) throw new Error("Only the organiser can answer requests.");
+  const request = (match.requests ?? []).find((r) => r.id === requestId);
+  if (!request) throw new Error("This request no longer exists.");
+  if (request.status !== "pending") throw new Error("This request was already answered.");
+  const answered = {
+    ...match,
+    requests: (match.requests ?? []).map((r) =>
+      r.id === requestId
+        ? { ...r, status: accept ? ("accepted" as const) : ("declined" as const) }
+        : r,
+    ),
+  };
+  return accept ? { ...joinMatch(match, request.userId), requests: answered.requests } : answered;
 }

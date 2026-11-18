@@ -1,10 +1,19 @@
 import { createMockMatches } from "@/data/padel.mock";
 import { toISODate } from "@/lib/padel/dates";
-import { filterMatches, joinMatch, leaveMatch, validateNewMatch } from "@/lib/padel/matches";
+import {
+  checkCanRequest,
+  filterMatches,
+  leaveMatch,
+  myRequest,
+  requestToJoin,
+  respondToRequest,
+  validateNewMatch,
+  withdrawRequest,
+} from "@/lib/padel/matches";
 import { readJSON, writeJSON } from "@/lib/storage";
 import { getSupabase } from "@/lib/supabase/client";
 import { AUTH_MODE } from "@/lib/supabase/config";
-import type { PadelMatch, PadelService } from "@/types/padel";
+import type { JoinRequest, PadelMatch, PadelService } from "@/types/padel";
 import { hasSession } from "./user.service";
 
 const MATCHES_KEY = "padel-matches";
@@ -43,14 +52,28 @@ const localPadelService: PadelService = {
       description: input.description.trim(),
       id: crypto.randomUUID(),
       playerIds: [userId],
+      requests: [],
       createdBy: userId,
       createdAt: new Date().toISOString(),
     };
     writeJSON(MATCHES_KEY, [...load(), match]);
     return match;
   },
-  async joinMatch(matchId, userId) {
-    return update(matchId, (m) => joinMatch(m, userId));
+  async requestToJoin(matchId, userId, note) {
+    return update(matchId, (m) =>
+      requestToJoin(m, {
+        id: crypto.randomUUID(),
+        userId,
+        note,
+        createdAt: new Date().toISOString(),
+      }),
+    );
+  },
+  async withdrawRequest(matchId, userId) {
+    return update(matchId, (m) => withdrawRequest(m, userId));
+  },
+  async respondToRequest(matchId, requestId, accept, userId) {
+    return update(matchId, (m) => respondToRequest(m, requestId, accept, userId));
   },
   async leaveMatch(matchId, userId) {
     return update(matchId, (m) => leaveMatch(m, userId));
@@ -84,9 +107,19 @@ interface MatchRow {
   created_by: string;
   created_at: string;
   padel_match_players: { user_id: string; joined_at: string }[];
+  /** RLS: the organiser gets all requests, everyone else only their own. Missing before the migration. */
+  padel_join_requests?: {
+    id: string;
+    user_id: string;
+    note: string;
+    status: JoinRequest["status"];
+    created_at: string;
+  }[];
 }
 
-const MATCH_SELECT = "*, padel_match_players(user_id, joined_at)";
+// One literal string, so supabase-js can still read the shape of the result.
+const MATCH_SELECT =
+  "*, padel_match_players(user_id, joined_at), padel_join_requests(id, user_id, note, status, created_at)";
 
 function rowToMatch(row: MatchRow): PadelMatch {
   // Creator first, then everyone else in the order they joined.
@@ -110,6 +143,13 @@ function rowToMatch(row: MatchRow): PadelMatch {
     description: row.description,
     createdBy: row.created_by,
     createdAt: row.created_at,
+    requests: (row.padel_join_requests ?? []).map((r) => ({
+      id: r.id,
+      userId: r.user_id,
+      note: r.note,
+      status: r.status,
+      createdAt: r.created_at,
+    })),
   };
 }
 
@@ -118,13 +158,31 @@ function fail(error: { message: string }): never {
   throw new Error(error.message);
 }
 
+/** Same without requests, for databases where 20261118020000_padel_requests.sql hasn't run yet. */
+const MATCH_SELECT_WITHOUT_REQUESTS = "*, padel_match_players(user_id, joined_at)";
+
+/** PostgREST answers PGRST200 when a nested table (here: the requests) doesn't exist. */
+const requestsTableMissing = (error: { code?: string; message: string }) =>
+  error.code === "PGRST200" && error.message.includes("padel_join_requests");
+
+async function selectMatches(
+  query: (
+    select: string,
+  ) => PromiseLike<{ data: unknown; error: { code?: string; message: string } | null }>,
+): Promise<unknown> {
+  const first = await query(MATCH_SELECT);
+  if (!first.error) return first.data;
+  if (!requestsTableMissing(first.error)) fail(first.error);
+  // Matches still load (without requests) until the migration has run.
+  const fallback = await query(MATCH_SELECT_WITHOUT_REQUESTS);
+  if (fallback.error) fail(fallback.error);
+  return fallback.data;
+}
+
 async function fetchMatch(matchId: string): Promise<PadelMatch> {
-  const { data, error } = await getSupabase()
-    .from("padel_matches")
-    .select(MATCH_SELECT)
-    .eq("id", matchId)
-    .single();
-  if (error) fail(error);
+  const data = await selectMatches((select) =>
+    getSupabase().from("padel_matches").select(select).eq("id", matchId).single(),
+  );
   return rowToMatch(data as MatchRow);
 }
 
@@ -132,11 +190,9 @@ async function fetchMatch(matchId: string): Promise<PadelMatch> {
 const supabasePadelService: PadelService = {
   async listMatches(filter) {
     if (!(await hasSession())) return [];
-    const { data, error } = await getSupabase()
-      .from("padel_matches")
-      .select(MATCH_SELECT)
-      .gte("date", toISODate(new Date()));
-    if (error) fail(error);
+    const data = await selectMatches((select) =>
+      getSupabase().from("padel_matches").select(select).gte("date", toISODate(new Date())),
+    );
     return filterMatches((data as MatchRow[]).map(rowToMatch), filter);
   },
   async createMatch(input, userId) {
@@ -160,23 +216,54 @@ const supabasePadelService: PadelService = {
     if (error) fail(error);
     return fetchMatch(data.id);
   },
-  async joinMatch(matchId, userId) {
+  async requestToJoin(matchId, userId, note) {
     // Same checks as offline first, for a clear message; the database checks again.
-    joinMatch(await fetchMatch(matchId), userId);
+    checkCanRequest(await fetchMatch(matchId), userId, note);
     const { error } = await getSupabase()
-      .from("padel_match_players")
-      .insert({ match_id: matchId, user_id: userId });
+      .from("padel_join_requests")
+      .insert({ match_id: matchId, user_id: userId, note: note.trim() });
+    if (error?.code === "PGRST205")
+      throw new Error("Join requests need a database update first (see docs/accounts.md).");
+    if (error) fail(error);
+    return fetchMatch(matchId);
+  },
+  async withdrawRequest(matchId, userId) {
+    withdrawRequest(await fetchMatch(matchId), userId);
+    const { error } = await getSupabase()
+      .from("padel_join_requests")
+      .delete()
+      .eq("match_id", matchId)
+      .eq("user_id", userId);
+    if (error) fail(error);
+    return fetchMatch(matchId);
+  },
+  async respondToRequest(matchId, requestId, accept, userId) {
+    respondToRequest(await fetchMatch(matchId), requestId, accept, userId);
+    // Adding another person as player needs the database function (it checks you organise it).
+    const { error } = await getSupabase().rpc("padel_respond_to_request", {
+      request_id: requestId,
+      accept,
+    });
     if (error) fail(error);
     return fetchMatch(matchId);
   },
   async leaveMatch(matchId, userId) {
-    leaveMatch(await fetchMatch(matchId), userId);
-    const { error } = await getSupabase()
+    const match = await fetchMatch(matchId);
+    leaveMatch(match, userId);
+    const supabase = getSupabase();
+    const { error } = await supabase
       .from("padel_match_players")
       .delete()
       .eq("match_id", matchId)
       .eq("user_id", userId);
     if (error) fail(error);
+    // Clear your accepted request too, so you could ask again later.
+    if (myRequest(match, userId))
+      await supabase
+        .from("padel_join_requests")
+        .delete()
+        .eq("match_id", matchId)
+        .eq("user_id", userId);
     return fetchMatch(matchId);
   },
   async cancelMatch(matchId, userId) {
@@ -194,6 +281,11 @@ const supabasePadelService: PadelService = {
       .on(
         "postgres_changes",
         { event: "*", schema: "public", table: "padel_match_players" },
+        listener,
+      )
+      .on(
+        "postgres_changes",
+        { event: "*", schema: "public", table: "padel_join_requests" },
         listener,
       )
       .subscribe();
