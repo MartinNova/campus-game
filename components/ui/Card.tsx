@@ -25,7 +25,7 @@ export function LinkCard({ href, title, description, icon, badge }: LinkCardProp
   return (
     <Link
       href={href}
-      className="border-border bg-surface hover:border-brand focus-visible:outline-brand flex items-start gap-3 rounded-2xl border p-4 shadow-sm transition-colors focus-visible:outline-2"
+      className="border-border bg-surface hover:border-brand focus-visible:outline-brand active:bg-brand/5 flex items-start gap-3 rounded-2xl border p-4 shadow-sm transition focus-visible:outline-2 active:scale-[0.98]"
     >
       {icon && (
         <span className="bg-brand/10 text-brand flex size-10 shrink-0 items-center justify-center rounded-xl">

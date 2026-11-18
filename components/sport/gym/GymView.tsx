@@ -127,7 +127,7 @@ export function GymView({ gym }: { gym: GymLocation }) {
                   }`}
                   style={{ height: `${r.percent}%` }}
                 />
-                <span className={`text-[10px] ${selected ? "font-bold" : "text-muted"}`}>
+                <span className={`text-[11px] ${selected ? "font-bold" : "text-muted"}`}>
                   {hour}
                 </span>
               </button>

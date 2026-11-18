@@ -41,7 +41,7 @@ export function DayStrip({ dates, value, onChange, counts }: DayStripProps) {
             </span>
             <span className="text-lg font-semibold">{date.getDate()}</span>
             <span
-              className={`mt-0.5 flex h-4 min-w-4 items-center justify-center rounded-full px-1 text-[10px] font-semibold ${
+              className={`mt-0.5 flex h-4 min-w-4 items-center justify-center rounded-full px-1 text-[11px] font-semibold ${
                 count === 0
                   ? "opacity-0"
                   : selected
