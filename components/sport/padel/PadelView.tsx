@@ -34,12 +34,19 @@ export function PadelView() {
   const reload = useCallback(() => padelService.listMatches().then(setMatches), []);
   // Load again when someone signs in or out (shared matches need an account).
   useEffect(() => {
-    void padelService.listMatches().then((list) => {
-      const days = upcomingDates(new Date(), DAYS_SHOWN);
-      setDates(days);
-      setSelectedDate((current) => current || days[0]);
-      setMatches(list);
-    });
+    void padelService
+      .listMatches()
+      .catch((err: unknown) => {
+        // Show the problem instead of loading forever.
+        setError(err instanceof Error ? err.message : "Could not load matches.");
+        return [];
+      })
+      .then((list) => {
+        const days = upcomingDates(new Date(), DAYS_SHOWN);
+        setDates(days);
+        setSelectedDate((current) => current || days[0]);
+        setMatches(list);
+      });
   }, [userId]);
   // Live: new matches and players from other devices appear without reloading.
   useEffect(() => padelService.onChange(() => void reload()), [reload]);

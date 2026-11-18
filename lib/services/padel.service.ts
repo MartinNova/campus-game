@@ -107,8 +107,8 @@ interface MatchRow {
   created_by: string;
   created_at: string;
   padel_match_players: { user_id: string; joined_at: string }[];
-  /** RLS: the organiser gets all requests, everyone else only their own. */
-  padel_join_requests: {
+  /** RLS: the organiser gets all requests, everyone else only their own. Missing before the migration. */
+  padel_join_requests?: {
     id: string;
     user_id: string;
     note: string;
@@ -158,13 +158,31 @@ function fail(error: { message: string }): never {
   throw new Error(error.message);
 }
 
+/** Same without requests, for databases where 20261118020000_padel_requests.sql hasn't run yet. */
+const MATCH_SELECT_WITHOUT_REQUESTS = "*, padel_match_players(user_id, joined_at)";
+
+/** PostgREST answers PGRST200 when a nested table (here: the requests) doesn't exist. */
+const requestsTableMissing = (error: { code?: string; message: string }) =>
+  error.code === "PGRST200" && error.message.includes("padel_join_requests");
+
+async function selectMatches(
+  query: (
+    select: string,
+  ) => PromiseLike<{ data: unknown; error: { code?: string; message: string } | null }>,
+): Promise<unknown> {
+  const first = await query(MATCH_SELECT);
+  if (!first.error) return first.data;
+  if (!requestsTableMissing(first.error)) fail(first.error);
+  // Matches still load (without requests) until the migration has run.
+  const fallback = await query(MATCH_SELECT_WITHOUT_REQUESTS);
+  if (fallback.error) fail(fallback.error);
+  return fallback.data;
+}
+
 async function fetchMatch(matchId: string): Promise<PadelMatch> {
-  const { data, error } = await getSupabase()
-    .from("padel_matches")
-    .select(MATCH_SELECT)
-    .eq("id", matchId)
-    .single();
-  if (error) fail(error);
+  const data = await selectMatches((select) =>
+    getSupabase().from("padel_matches").select(select).eq("id", matchId).single(),
+  );
   return rowToMatch(data as MatchRow);
 }
 
@@ -172,11 +190,9 @@ async function fetchMatch(matchId: string): Promise<PadelMatch> {
 const supabasePadelService: PadelService = {
   async listMatches(filter) {
     if (!(await hasSession())) return [];
-    const { data, error } = await getSupabase()
-      .from("padel_matches")
-      .select(MATCH_SELECT)
-      .gte("date", toISODate(new Date()));
-    if (error) fail(error);
+    const data = await selectMatches((select) =>
+      getSupabase().from("padel_matches").select(select).gte("date", toISODate(new Date())),
+    );
     return filterMatches((data as MatchRow[]).map(rowToMatch), filter);
   },
   async createMatch(input, userId) {
@@ -206,6 +222,8 @@ const supabasePadelService: PadelService = {
     const { error } = await getSupabase()
       .from("padel_join_requests")
       .insert({ match_id: matchId, user_id: userId, note: note.trim() });
+    if (error?.code === "PGRST205")
+      throw new Error("Join requests need a database update first (see docs/accounts.md).");
     if (error) fail(error);
     return fetchMatch(matchId);
   },
