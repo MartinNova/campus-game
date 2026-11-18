@@ -4,13 +4,11 @@ import { Car, Footprints, MapPin, Navigation, TrainFront } from "lucide-react";
 import { useState, useSyncExternalStore } from "react";
 import { Badge } from "@/components/ui/Badge";
 import { Card } from "@/components/ui/Card";
-import trainData from "@/data/trains.json";
 import { CAMPUS, directionsUrl, mapEmbedUrl, uberUrl } from "@/lib/transport/links";
-import { formatMinutesAway, lisbonNow, nextTrains, travelMinutes } from "@/lib/transport/trains";
-import type { Direction, StationId, TrainTimetable } from "@/types/transport";
-
-// JSON arrays are typed as string[][]; the generator guarantees [time, info] pairs.
-const TRAINS = trainData as unknown as TrainTimetable;
+import { formatMinutesAway, nextTrains, travelMinutes } from "@/lib/transport/trains";
+import type { Direction, StationId } from "@/types/transport";
+import { AfterClassCard } from "./AfterClassCard";
+import { linkClass, readClock, Segmented, subscribeToClock, TRAINS } from "./shared";
 
 /** CP page about replacement buses on the Linha de Cascais. */
 const CP_BUS_INFO_URL = "https://www.cp.pt/info/pt/w/linha-de-cascais-servico-rodoviario";
@@ -20,50 +18,6 @@ const DIRECTIONS: { id: Direction; label: string }[] = [
   { id: "toLisbon", label: "To Lisbon" },
   { id: "toCascais", label: "To Cascais" },
 ];
-
-const linkClass =
-  "border-border bg-surface hover:border-brand inline-flex h-10 items-center justify-center gap-2 rounded-xl border px-4 text-sm font-medium";
-
-/** Re-renders every 30 seconds so "in 5 min" stays correct. */
-function subscribeToClock(onChange: () => void) {
-  const id = setInterval(onChange, 30_000);
-  return () => clearInterval(id);
-}
-const readClock = () => {
-  const { date, time } = lisbonNow();
-  return `${date} ${time}`;
-};
-
-function Segmented<T extends string>({
-  label,
-  options,
-  value,
-  onChange,
-}: {
-  label: string;
-  options: { id: T; label: string }[];
-  value: T;
-  onChange: (value: T) => void;
-}) {
-  return (
-    <div role="radiogroup" aria-label={label} className="bg-muted/10 flex gap-1 rounded-xl p-1">
-      {options.map((o) => (
-        <button
-          key={o.id}
-          type="button"
-          role="radio"
-          aria-checked={value === o.id}
-          onClick={() => onChange(o.id)}
-          className={`h-9 flex-1 rounded-lg text-sm font-medium transition ${
-            value === o.id ? "bg-surface text-foreground shadow-sm" : "text-muted"
-          }`}
-        >
-          {o.label}
-        </button>
-      ))}
-    </div>
-  );
-}
 
 function TrainBoard() {
   // The clock is only known in the browser (the page is prerendered).
@@ -154,6 +108,8 @@ function TrainBoard() {
 export function GettingThereView() {
   return (
     <div className="grid grid-cols-1 gap-4">
+      <AfterClassCard />
+
       <Card className="grid gap-3 p-0">
         <iframe
           title="Map of the Nova SBE campus"
