@@ -42,7 +42,7 @@ export const MAIN_NAV: NavItem[] = [
   // Study Hub bundles the timetable and the to-do lists (/timetable stays its own page).
   {
     href: "/study",
-    label: "Study Hub",
+    label: "Study",
     icon: GraduationCap,
     status: "live",
     alsoActiveFor: ["/timetable"],
@@ -137,3 +137,16 @@ export function isActive(pathname: string, href: string, alsoActiveFor: string[]
     (route) => pathname === route || pathname.startsWith(`${route}/`),
   );
 }
+
+/** Name of a page for "‹ Back" buttons, e.g. "/sport" -> "Sport". Falls back to "Back". */
+export function labelForHref(href: string): string {
+  const all = [...MAIN_NAV, ...STUDY_MODULES, ...SPORT_MODULES];
+  return all.find((item) => item.href === href)?.label ?? BACK_LABELS[href] ?? "Back";
+}
+
+/** Pages that are not in a nav list but are a "back" target. */
+const BACK_LABELS: Record<string, string> = {
+  "/canteen": "Food Options",
+  "/campus/rooms": "Rooms & flats",
+  "/profile": "Your area",
+};

@@ -13,7 +13,7 @@ function AccountLinks({ user }: { user: User }) {
       <Link
         href="/settings"
         aria-label="Settings"
-        className="text-muted hover:text-foreground focus-visible:outline-brand flex size-9 items-center justify-center rounded-full focus-visible:outline-2"
+        className="text-muted hover:text-foreground focus-visible:outline-brand flex size-11 items-center justify-center rounded-full focus-visible:outline-2"
       >
         <Settings className="size-5" aria-hidden />
       </Link>
@@ -37,9 +37,9 @@ function AccountLinks({ user }: { user: User }) {
 /**
  * Header account area.
  * Accounts mode: "Sign in" when signed out, otherwise settings + your picture.
- * Demo mode: additionally pick which mock account you are.
+ * Demo mode: additionally pick which mock account you are (home page only; `compact` hides it).
  */
-export function AccountSwitcher() {
+export function AccountSwitcher({ compact = false }: { compact?: boolean }) {
   const { user, users, ready, mode, switchUser } = useCurrentUser();
 
   if (!ready) return <div className="bg-border h-9 w-28 animate-pulse rounded-xl" />;
@@ -63,6 +63,13 @@ export function AccountSwitcher() {
   }
 
   if (!user) return null;
+  if (compact) {
+    return (
+      <div className="flex items-center gap-1">
+        <AccountLinks user={user} />
+      </div>
+    );
+  }
   const team = users.filter((u) => u.role === "team");
   const demo = users.filter((u) => u.role === "demo");
 

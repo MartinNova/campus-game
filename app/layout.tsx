@@ -3,6 +3,7 @@ import { Geist, Geist_Mono } from "next/font/google";
 import { BottomNav } from "@/components/layout/BottomNav";
 import { Header } from "@/components/layout/Header";
 import { CurrentUserProvider } from "@/components/providers/CurrentUserProvider";
+import { PageTitleProvider } from "@/components/providers/PageTitleProvider";
 import { APP_DESCRIPTION, APP_NAME, APP_SHORT_NAME } from "@/lib/config/app";
 import "./globals.css";
 
@@ -21,8 +22,8 @@ export const viewport: Viewport = {
   initialScale: 1,
   viewportFit: "cover",
   themeColor: [
-    { media: "(prefers-color-scheme: light)", color: "#ffffff" },
-    { media: "(prefers-color-scheme: dark)", color: "#151b26" },
+    { media: "(prefers-color-scheme: light)", color: "#f2f4f7" },
+    { media: "(prefers-color-scheme: dark)", color: "#0a1220" },
   ],
 };
 
@@ -32,9 +33,11 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
     <html lang="en" className={`${geistSans.variable} ${geistMono.variable} h-full antialiased`}>
       <body className="flex min-h-full flex-col font-sans">
         <CurrentUserProvider>
-          <Header />
-          <main className="mx-auto w-full max-w-2xl flex-1 px-4 pt-5 pb-24">{children}</main>
-          <BottomNav />
+          <PageTitleProvider>
+            <Header />
+            <main className="mx-auto w-full max-w-2xl flex-1 px-4 pt-2 pb-36">{children}</main>
+            <BottomNav />
+          </PageTitleProvider>
         </CurrentUserProvider>
       </body>
     </html>
