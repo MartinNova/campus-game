@@ -91,7 +91,7 @@ export function WeekGrid(props: WeekGridProps) {
       {/* Deadlines + all-day row */}
       {hasTopRow && (
         <div className="border-border flex border-b">
-          <div className="text-muted w-10 shrink-0 py-1 pr-1 text-right text-[10px]">
+          <div className="text-muted w-10 shrink-0 py-1 pr-1 text-right text-[11px]">
             due · all-day
           </div>
           {days.map((day) => (
@@ -104,7 +104,7 @@ export function WeekGrid(props: WeekGridProps) {
                     type="button"
                     onClick={() => onSelectDay(day)}
                     title={e.start ? `${e.start} ${e.title}` : e.title}
-                    className={`block w-full truncate rounded px-1 py-0.5 text-left text-[10px] font-medium ${CATEGORY_STYLE[e.category].chip}`}
+                    className={`block w-full truncate rounded px-1 py-0.5 text-left text-[11px] font-medium ${CATEGORY_STYLE[e.category].chip}`}
                   >
                     {e.start && <span className="opacity-90">{e.start} </span>}
                     {e.title}
@@ -123,7 +123,7 @@ export function WeekGrid(props: WeekGridProps) {
               <div
                 key={h}
                 style={{ height: HOUR_PX }}
-                className="text-muted -translate-y-1.5 pr-1 text-right text-[10px] tabular-nums"
+                className="text-muted -translate-y-1.5 pr-1 text-right text-[11px] tabular-nums"
               >
                 {h > 0 ? `${String(h).padStart(2, "0")}:00` : ""}
               </div>
@@ -162,7 +162,7 @@ export function WeekGrid(props: WeekGridProps) {
                       if (p.event.lectureId) onOpenLecture(p.event.lectureId);
                     }}
                     title={`${p.event.start} ${p.event.title}`}
-                    className={`absolute overflow-hidden rounded-md px-1 py-0.5 text-left text-[10px] leading-tight shadow-sm ${CATEGORY_STYLE[p.event.category].chip}`}
+                    className={`absolute overflow-hidden rounded-md px-1 py-0.5 text-left text-[11px] leading-tight shadow-sm ${CATEGORY_STYLE[p.event.category].chip}`}
                     style={{
                       top: top + 1,
                       height,

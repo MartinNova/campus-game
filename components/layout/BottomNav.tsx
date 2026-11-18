@@ -14,16 +14,16 @@ export function BottomNav() {
       className="border-border bg-surface/95 fixed inset-x-0 bottom-0 z-20 border-t pb-[env(safe-area-inset-bottom)] backdrop-blur"
     >
       <ul className="mx-auto flex max-w-2xl">
-        {MAIN_NAV.map(({ href, label, icon: Icon, status, alsoActiveFor }) => {
+        {MAIN_NAV.map(({ href, label, icon: Icon, alsoActiveFor }) => {
           const active = isActive(pathname, href, alsoActiveFor);
           return (
             <li key={href} className="flex-1">
               <Link
                 href={href}
                 aria-current={active ? "page" : undefined}
-                className={`flex flex-col items-center gap-0.5 py-2 text-[11px] font-medium transition-colors ${
+                className={`flex flex-col items-center gap-0.5 py-2 text-[11px] font-medium transition active:opacity-60 ${
                   active ? "text-brand" : "text-muted hover:text-foreground"
-                } ${status === "soon" && !active ? "opacity-60" : ""}`}
+                }`}
               >
                 <Icon className="size-5" aria-hidden />
                 {label}
