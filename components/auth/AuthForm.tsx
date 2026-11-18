@@ -31,9 +31,12 @@ const fieldClass =
 /** Sign in / create account with e-mail and password. */
 export function AuthForm() {
   const router = useRouter();
-  const loginError = useSearchParams().get("login_error");
+  const params = useSearchParams();
+  const loginError = params.get("login_error");
+  // Where to go after signing in (only paths inside the app), e.g. "/" from the welcome screen.
+  const next = params.get("next")?.startsWith("/") ? params.get("next")! : "/profile";
   const { user, ready, mode, refresh } = useCurrentUser();
-  const [tab, setTab] = useState<Tab>("signin");
+  const [tab, setTab] = useState<Tab>(params.get("tab") === "signup" ? "signup" : "signin");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [username, setUsername] = useState("");
@@ -46,8 +49,8 @@ export function AuthForm() {
 
   // Already signed in: go straight to your area.
   useEffect(() => {
-    if (ready && user) router.replace("/profile");
-  }, [ready, user, router]);
+    if (ready && user) router.replace(next);
+  }, [ready, user, router, next]);
 
   if (mode === "demo" || !authService) {
     return (
@@ -105,7 +108,8 @@ export function AuthForm() {
         }
       }
       await refresh();
-      router.push("/profile");
+      // New accounts first fill in their profile; returning users go where they came from.
+      router.push(tab === "signup" ? "/profile" : next);
     } catch (err) {
       setError(err instanceof Error ? err.message : "Something went wrong.");
     } finally {
