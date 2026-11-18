@@ -103,9 +103,32 @@ export interface PadelMatch {
   createdBy: string;
   /** ISO timestamp. */
   createdAt: string;
+  /**
+   * Requests to join. The organiser sees all of them, everyone else only their own.
+   * Missing = none.
+   */
+  requests?: JoinRequest[];
 }
 
-export type NewPadelMatch = Omit<PadelMatch, "id" | "playerIds" | "createdBy" | "createdAt">;
+export type RequestStatus = "pending" | "accepted" | "declined";
+
+/** "Can I join?" sent to the organiser, who accepts or declines it. */
+export interface JoinRequest {
+  id: string;
+  userId: string;
+  /** Optional short note, e.g. "I play at level 3". */
+  note: string;
+  status: RequestStatus;
+  /** ISO timestamp. */
+  createdAt: string;
+}
+
+export const MAX_REQUEST_NOTE = 200;
+
+export type NewPadelMatch = Omit<
+  PadelMatch,
+  "id" | "playerIds" | "createdBy" | "createdAt" | "requests"
+>;
 
 export interface PadelMatchFilter {
   date?: string;
@@ -116,7 +139,17 @@ export interface PadelMatchFilter {
 export interface PadelService {
   listMatches(filter?: PadelMatchFilter): Promise<PadelMatch[]>;
   createMatch(input: NewPadelMatch, userId: string): Promise<PadelMatch>;
-  joinMatch(matchId: string, userId: string): Promise<PadelMatch>;
+  /** Asks the organiser for a spot; they accept or decline. */
+  requestToJoin(matchId: string, userId: string, note: string): Promise<PadelMatch>;
+  /** Takes back your own pending request. */
+  withdrawRequest(matchId: string, userId: string): Promise<PadelMatch>;
+  /** Organiser only: accepting adds the player (if a spot is still free). */
+  respondToRequest(
+    matchId: string,
+    requestId: string,
+    accept: boolean,
+    userId: string,
+  ): Promise<PadelMatch>;
   leaveMatch(matchId: string, userId: string): Promise<PadelMatch>;
   /** Only the creator can cancel (e.g. booking cancelled). */
   cancelMatch(matchId: string, userId: string): Promise<void>;

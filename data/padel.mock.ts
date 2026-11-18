@@ -56,5 +56,27 @@ export function createMockMatches(today: Date): PadelMatch[] {
       description: "Looking for 3 competitive players.",
       createdBy: "demo-4",
     },
+    {
+      ...base,
+      id: "mock-4",
+      date: inDays(2),
+      time: "19:00",
+      location: "Padel CIF",
+      level: 2.5,
+      playerIds: ["team-1"],
+      guestCount: 1,
+      description: "Booked a court after class, 2 spots open.",
+      createdBy: "team-1",
+      // So the organiser view (accept / decline) shows up in demo mode.
+      requests: [
+        {
+          id: "mock-4-request",
+          userId: "demo-3",
+          note: "I play about level 2.5, happy to join!",
+          status: "pending",
+          createdAt: today.toISOString(),
+        },
+      ],
+    },
   ];
 }

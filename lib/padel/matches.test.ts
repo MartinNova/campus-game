@@ -1,7 +1,16 @@
 import { describe, expect, it } from "vitest";
 import { freeSpots, getLevelBand, type NewPadelMatch, type PadelMatch } from "@/types/padel";
 import { fromISODate, toISODate, upcomingDates } from "./dates";
-import { filterMatches, joinMatch, leaveMatch, validateNewMatch } from "./matches";
+import {
+  filterMatches,
+  joinMatch,
+  leaveMatch,
+  pendingRequests,
+  requestToJoin,
+  respondToRequest,
+  validateNewMatch,
+  withdrawRequest,
+} from "./matches";
 
 const match = (overrides: Partial<PadelMatch> = {}): PadelMatch => ({
   id: "m1",
@@ -92,5 +101,63 @@ describe("dates", () => {
   it("round-trips local dates", () => {
     expect(toISODate(fromISODate("2026-11-20"))).toBe("2026-11-20");
     expect(upcomingDates(fromISODate("2026-11-30"), 2)).toEqual(["2026-11-30", "2026-12-01"]);
+  });
+});
+
+describe("join requests", () => {
+  const ask = (m: PadelMatch, userId: string, createdAt = "2026-11-18T10:00:00Z") =>
+    requestToJoin(m, { id: `r-${userId}`, userId, note: " Level 3 ", createdAt });
+
+  it("sends a pending request with a trimmed note", () => {
+    const asked = ask(match(), "b");
+    expect(asked.requests).toEqual([
+      {
+        id: "r-b",
+        userId: "b",
+        note: "Level 3",
+        status: "pending",
+        createdAt: "2026-11-18T10:00:00Z",
+      },
+    ]);
+    expect(asked.playerIds).toEqual(["a"]);
+  });
+
+  it("blocks the organiser, players, double requests and full courts", () => {
+    expect(() => ask(match(), "a")).toThrow(/posted/);
+    expect(() => ask(match({ playerIds: ["a", "b"] }), "b")).toThrow(/already playing/);
+    expect(() => ask(ask(match(), "b"), "b")).toThrow(/already asked/);
+    expect(() => ask(match({ guestCount: 3 }), "b")).toThrow(/full/);
+  });
+
+  it("lists pending requests oldest first and lets you take yours back", () => {
+    const asked = ask(ask(match(), "c", "2026-11-18T11:00:00Z"), "b", "2026-11-18T09:00:00Z");
+    expect(pendingRequests(asked).map((r) => r.userId)).toEqual(["b", "c"]);
+    expect(withdrawRequest(asked, "b").requests?.map((r) => r.userId)).toEqual(["c"]);
+  });
+
+  it("accepting adds the player, declining keeps them out", () => {
+    const asked = ask(match(), "b");
+    const accepted = respondToRequest(asked, "r-b", true, "a");
+    expect(accepted.playerIds).toEqual(["a", "b"]);
+    expect(accepted.requests?.[0].status).toBe("accepted");
+
+    const declined = respondToRequest(asked, "r-b", false, "a");
+    expect(declined.playerIds).toEqual(["a"]);
+    expect(() => ask(declined, "b")).toThrow(/said no/);
+  });
+
+  it("only the organiser answers, once, and not beyond a full court", () => {
+    const asked = ask(match(), "b");
+    expect(() => respondToRequest(asked, "r-b", true, "b")).toThrow(/organiser/);
+    const accepted = respondToRequest(asked, "r-b", true, "a");
+    expect(() => respondToRequest(accepted, "r-b", false, "a")).toThrow(/already answered/);
+    expect(() => respondToRequest({ ...asked, guestCount: 3 }, "r-b", true, "a")).toThrow(/full/);
+  });
+
+  it("leaving clears your request so you could ask again", () => {
+    const accepted = respondToRequest(ask(match(), "b"), "r-b", true, "a");
+    const left = leaveMatch(accepted, "b");
+    expect(left.requests).toEqual([]);
+    expect(ask(left, "b").requests?.[0].status).toBe("pending");
   });
 });
