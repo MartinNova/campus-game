@@ -29,6 +29,7 @@ Each module owns its own files. Stay inside them:
 | Accounts  | `app/login/`, `app/profile/`, `app/settings/`, `app/auth/` | `components/auth/`, `components/profile/`, `components/settings/` | `lib/services/{auth,profile,user}.service.ts`, `lib/profile/`, `lib/supabase/` | `types/profile.ts`, `types/user.ts` | `supabase/migrations/`         |
 | Deadlines | `app/study/deadlines/`                                     | `components/deadlines/`                                           | `lib/deadlines/`                                                               | `types/deadlines.ts`                | `data/deadlines.ts`            |
 | Transport | `app/campus/getting-here/`                                 | `components/transport/`                                           | `lib/transport/`, `scripts/build-train-timetable.mjs` (`npm run trains`)       | `types/transport.ts`                | `data/trains.json` (generated) |
+| Messages  | `app/friends/messages/`, `app/friends/chat/`               | `components/messages/`                                            | `lib/services/message.service.ts`, `lib/messages/`                             | `types/messages.ts`                 | `supabase/migrations/`         |
 
 Shared files (change only in small, separate PRs and tell the team):
 `app/layout.tsx`, `components/ui/`, `components/layout/`, `lib/config/`, `lib/storage.ts`, `app/globals.css`.
