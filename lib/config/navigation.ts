@@ -71,7 +71,7 @@ export const STUDY_MODULES: SubModule[] = [
   {
     href: "/study/todos",
     label: "To-dos",
-    description: "Lists for uni work, as a checklist or a board, by day, week or month.",
+    description: "Uni to-do lists as checklist, board or deadline calendar, with colour labels.",
     icon: ListChecks,
     status: "live",
     branch: "feature/study-hub",

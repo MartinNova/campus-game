@@ -4,11 +4,13 @@ import { Plus } from "lucide-react";
 import { useState } from "react";
 import { Button } from "@/components/ui/Button";
 import { Card } from "@/components/ui/Card";
-import { TODO_PRIORITIES, type NewTodo, type TodoPriority } from "@/types/todo";
+import { TODO_PRIORITIES, type NewTodo, type TodoLabel, type TodoPriority } from "@/types/todo";
+import { LabelPicker } from "./LabelPicker";
 
 interface NewTaskFormProps {
   /** Pre-filled due date (usually today). */
   defaultDate: string;
+  labels: TodoLabel[];
   onSubmit: (input: NewTodo) => Promise<void>;
 }
 
@@ -16,10 +18,11 @@ const fieldClass =
   "border-border bg-surface focus-visible:outline-brand mt-1 h-10 w-full rounded-xl border px-3 text-sm focus-visible:outline-2";
 
 /** Adds a task to the open list. */
-export function NewTaskForm({ defaultDate, onSubmit }: NewTaskFormProps) {
+export function NewTaskForm({ defaultDate, labels, onSubmit }: NewTaskFormProps) {
   const [title, setTitle] = useState("");
   const [dueDate, setDueDate] = useState(defaultDate);
   const [priority, setPriority] = useState<TodoPriority>("normal");
+  const [labelIds, setLabelIds] = useState<string[]>([]);
   const [error, setError] = useState<string | null>(null);
   const [saving, setSaving] = useState(false);
 
@@ -28,8 +31,9 @@ export function NewTaskForm({ defaultDate, onSubmit }: NewTaskFormProps) {
     setSaving(true);
     setError(null);
     try {
-      await onSubmit({ title, priority, dueDate: dueDate === "" ? null : dueDate });
+      await onSubmit({ title, priority, labelIds, dueDate: dueDate === "" ? null : dueDate });
       setTitle("");
+      setLabelIds([]);
     } catch (err) {
       setError(err instanceof Error ? err.message : "Could not add the task.");
     } finally {
@@ -77,6 +81,18 @@ export function NewTaskForm({ defaultDate, onSubmit }: NewTaskFormProps) {
               ))}
             </select>
           </label>
+        </div>
+        <div>
+          <p className="text-sm font-medium">Labels</p>
+          <LabelPicker
+            labels={labels}
+            selected={labelIds}
+            onToggle={(id) =>
+              setLabelIds((current) =>
+                current.includes(id) ? current.filter((l) => l !== id) : [...current, id],
+              )
+            }
+          />
         </div>
         {error && (
           <p role="alert" className="text-sm text-red-700 dark:text-red-400">
