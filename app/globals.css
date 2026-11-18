@@ -2,30 +2,44 @@
 
 /*
  * Design tokens. Use the Tailwind classes generated from these
- * (bg-surface, text-muted, bg-brand, ...) instead of hard-coded colours,
+ * (bg-surface, text-muted, bg-brand, bg-ocean ...) instead of hard-coded colours,
  * so every module looks the same and dark mode works automatically.
+ *
+ * Look: modern iOS. Grouped grey background, white rounded surfaces, Apple's
+ * system font, glass only on the floating bars (see .glass below).
+ * Colour roles: navy = actions + selected tab, ocean = live outdoor info
+ * (Carcavelos, sport), accent = fills for small highlights.
+ * Contrast (WCAG AA): muted 5.4:1 on background, white on ocean 6.0:1.
  */
 :root {
-  --background: #f5f6f8;
-  --foreground: #111827;
+  --background: #f2f4f7;
+  --foreground: #0f1b2a;
   --surface: #ffffff;
-  --muted: #5f6673; /* 5.3:1 on --background (WCAG AA) */
-  --border: #e5e7eb;
-  --brand: #0b2a4a; /* Nova-style navy */
+  --muted: #5a6472;
+  --border: #d5dae1;
+  --brand: #0b2a4a; /* Nova navy */
   --brand-foreground: #ffffff;
+  --ocean: #0b6e78; /* Atlantic teal, Carcavelos */
+  --ocean-foreground: #ffffff;
   --accent: #f2a900;
+  --glass: rgb(255 255 255 / 0.72);
+  --glass-border: rgb(255 255 255 / 0.75);
 }
 
 @media (prefers-color-scheme: dark) {
   :root {
-    --background: #0b0f17;
-    --foreground: #f3f4f6;
-    --surface: #151b26;
-    --muted: #9ca3af;
-    --border: #273042;
-    --brand: #5b9bd5;
-    --brand-foreground: #0b0f17;
+    --background: #0a1220;
+    --foreground: #e8edf3;
+    --surface: #121c2c;
+    --muted: #9aa6b6;
+    --border: #223047;
+    --brand: #7fb2e5;
+    --brand-foreground: #0a1220;
+    --ocean: #0d5c64;
+    --ocean-foreground: #ffffff;
     --accent: #f2b733;
+    --glass: rgb(18 28 44 / 0.72);
+    --glass-border: rgb(255 255 255 / 0.1);
   }
 }
 
@@ -37,8 +51,12 @@
   --color-border: var(--border);
   --color-brand: var(--brand);
   --color-brand-foreground: var(--brand-foreground);
+  --color-ocean: var(--ocean);
+  --color-ocean-foreground: var(--ocean-foreground);
   --color-accent: var(--accent);
-  --font-sans: var(--font-geist-sans);
+  /* SF Pro on Apple devices, Geist everywhere else. */
+  --font-sans:
+    -apple-system, BlinkMacSystemFont, "SF Pro Text", var(--font-geist-sans), system-ui, sans-serif;
   --font-mono: var(--font-geist-mono);
 }
 
@@ -47,4 +65,26 @@ body {
   color: var(--foreground);
   /* No grey flash on tap (iOS Safari); taps get an active: state instead. */
   -webkit-tap-highlight-color: transparent;
+}
+
+/*
+ * Liquid-Glass-style material for the floating bars only (never for content).
+ * Falls back to an opaque surface when people ask for less transparency or more contrast.
+ */
+@layer components {
+  .glass {
+    background: var(--glass);
+    border: 1px solid var(--glass-border);
+    -webkit-backdrop-filter: blur(24px) saturate(1.4);
+    backdrop-filter: blur(24px) saturate(1.4);
+  }
+
+  @media (prefers-reduced-transparency: reduce), (prefers-contrast: more) {
+    .glass {
+      background: var(--surface);
+      border-color: var(--border);
+      -webkit-backdrop-filter: none;
+      backdrop-filter: none;
+    }
+  }
 }

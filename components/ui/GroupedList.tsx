@@ -1,0 +1,68 @@
+import Link from "next/link";
+
+/** Icon tile colours, like the coloured squares in iOS Settings. White glyph on each passes 3:1. */
+const TILE = {
+  brand: "bg-brand text-brand-foreground",
+  ocean: "bg-ocean text-ocean-foreground",
+  food: "bg-[#b5651d] text-white",
+  sport: "bg-[#2e7d32] text-white",
+  task: "bg-[#8a5d00] text-white",
+} as const;
+
+export type TileTone = keyof typeof TILE;
+
+/** iOS "inset grouped" list: optional section title, then rows on one rounded surface. */
+export function GroupedList({ title, children }: { title?: string; children: React.ReactNode }) {
+  return (
+    <section className="flex flex-col gap-2">
+      {title && <h2 className="mx-1 text-[22px] leading-7 font-bold">{title}</h2>}
+      <div className="bg-surface overflow-hidden rounded-3xl">{children}</div>
+    </section>
+  );
+}
+
+interface ListRowProps {
+  href: string;
+  icon: React.ReactNode;
+  tone?: TileTone;
+  title: string;
+  /** Second line under the title. */
+  subtitle?: string;
+  /** Right-hand value, e.g. "2 open". */
+  detail?: React.ReactNode;
+}
+
+/** One tappable row. Separators start after the icon, as in iOS. */
+export function ListRow({ href, icon, tone = "brand", title, subtitle, detail }: ListRowProps) {
+  return (
+    <Link
+      href={href}
+      className="group focus-visible:outline-brand active:bg-brand/5 flex min-h-14 items-center gap-3.5 pl-4 transition-colors focus-visible:outline-2 focus-visible:-outline-offset-2"
+    >
+      <span className={`flex size-8 shrink-0 items-center justify-center rounded-lg ${TILE[tone]}`}>
+        {icon}
+      </span>
+      <span className="border-border flex min-h-14 min-w-0 flex-1 items-center gap-2 self-stretch border-b py-2 pr-3.5 group-last:border-b-0">
+        <span className="min-w-0 flex-1">
+          <span className="block truncate text-[17px]">{title}</span>
+          {subtitle && <span className="text-muted block truncate text-[15px]">{subtitle}</span>}
+        </span>
+        {detail && <span className="text-muted shrink-0 text-[17px]">{detail}</span>}
+        <svg
+          width="9"
+          height="15"
+          viewBox="0 0 9 15"
+          fill="none"
+          stroke="currentColor"
+          strokeWidth="2"
+          strokeLinecap="round"
+          strokeLinejoin="round"
+          className="text-muted/60 shrink-0"
+          aria-hidden
+        >
+          <path d="m1.5 1.5 6 6-6 6" />
+        </svg>
+      </span>
+    </Link>
+  );
+}

@@ -1,17 +1,28 @@
 "use client";
 
+import { useSyncExternalStore } from "react";
 import { useCurrentUser } from "@/components/providers/CurrentUserProvider";
-import { APP_DESCRIPTION } from "@/lib/config/app";
+import { LargeTitle } from "@/components/ui/LargeTitle";
 
+/** Today's date in Lisbon, e.g. "Tuesday 17 November". */
+function todayLabel(): string {
+  return new Intl.DateTimeFormat("en-GB", {
+    timeZone: "Europe/Lisbon",
+    weekday: "long",
+    day: "numeric",
+    month: "long",
+  })
+    .format(new Date())
+    .replace(",", "");
+}
+
+const noSubscription = () => () => {};
+
+/** Large title on the home page: date above, "Olá, <name>". */
 export function Greeting() {
   const { user } = useCurrentUser();
+  // Browser only, so server and browser render the same HTML (the server may be in another time zone).
+  const date = useSyncExternalStore(noSubscription, todayLabel, () => "\u00a0");
 
-  return (
-    <div className="mb-6">
-      <h1 className="text-2xl font-bold tracking-tight">
-        {user ? `Olá, ${user.firstName}!` : "Olá!"}
-      </h1>
-      <p className="text-muted mt-1">{APP_DESCRIPTION}</p>
-    </div>
-  );
+  return <LargeTitle title={user ? `Olá, ${user.firstName}` : "Olá"} eyebrow={date} />;
 }

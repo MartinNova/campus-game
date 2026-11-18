@@ -1,25 +1,15 @@
 import { Greeting } from "@/components/home/Greeting";
-import { Badge } from "@/components/ui/Badge";
-import { LinkCard } from "@/components/ui/Card";
-import { MAIN_NAV } from "@/lib/config/navigation";
+import { SurfHero } from "@/components/home/SurfHero";
+import { TodayView } from "@/components/home/TodayView";
 
+/** Home: what's on today. The modules themselves live in the tab bar. */
 export default function HomePage() {
-  const modules = MAIN_NAV.filter((item) => item.href !== "/");
-
   return (
     <>
       <Greeting />
-      <h2 className="text-muted mb-3 text-sm font-semibold tracking-wide uppercase">Modules</h2>
-      <div className="grid gap-3 sm:grid-cols-2">
-        {modules.map(({ href, label, icon: Icon, status }) => (
-          <LinkCard
-            key={href}
-            href={href}
-            title={label}
-            icon={<Icon className="size-5" aria-hidden />}
-            badge={status === "soon" ? <Badge>Soon</Badge> : null}
-          />
-        ))}
+      <div className="flex flex-col gap-6">
+        <SurfHero />
+        <TodayView />
       </div>
     </>
   );
