@@ -11,12 +11,11 @@ import type { Profile, ProfileUpdate } from "@/types/profile";
 import { AccountSection } from "./AccountSection";
 import { AboutSection, InterestsSection, PrivacySection, StudySection } from "./ProfileSections";
 
-/** Editable copy of the profile (everything except e-mail and student number). */
+/** Editable copy of the profile (everything except e-mail). */
 function toUpdate(profile: Profile): ProfileUpdate {
   const update: Partial<Profile> = { ...profile };
   delete update.userId;
   delete update.email;
-  delete update.studentId;
   return update as ProfileUpdate;
 }
 

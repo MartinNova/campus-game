@@ -20,6 +20,7 @@ const demoProfileService: ProfileService = {
     const user = (await userService.listUsers()).find((u) => u.id === userId);
     if (!user) return null;
     const defaults: ProfileUpdate = {
+      studentId: user.studentId,
       username: `${user.firstName}.${user.lastName}`.toLowerCase().replace(/[^a-z0-9_.]/g, ""),
       firstName: user.firstName,
       lastName: user.lastName,
@@ -41,7 +42,7 @@ const demoProfileService: ProfileService = {
       showInSuggestions: true,
     };
     const saved = readJSON<Record<string, Partial<ProfileUpdate>>>(PROFILES_KEY, {})[userId];
-    return { userId, email: user.email ?? "", studentId: user.studentId, ...defaults, ...saved };
+    return { userId, email: user.email ?? "", ...defaults, ...saved };
   },
   async getProfileByUsername(username) {
     const all = await this.listProfiles();
@@ -70,6 +71,13 @@ const demoProfileService: ProfileService = {
   },
 };
 
+/** Your own student number; other students' numbers are not readable (see migrations). */
+async function myStudentId(): Promise<string> {
+  const { data, error } = await getSupabase().rpc("my_student_id");
+  // Before the student ID migration runs the function doesn't exist yet: show it as empty.
+  return error ? "" : ((data as string | null) ?? "");
+}
+
 /** Your own e-mail comes from the login; other students' e-mails are not readable. */
 async function emailIfMine(userId: string): Promise<string> {
   const {
@@ -87,7 +95,10 @@ const supabaseProfileService: ProfileService = {
       .eq("id", userId)
       .maybeSingle();
     if (error) throw error;
-    return data ? rowToProfile(data as unknown as ProfileRow, await emailIfMine(userId)) : null;
+    if (!data) return null;
+    const email = await emailIfMine(userId);
+    // Only for yourself (the e-mail is only known for your own profile).
+    return rowToProfile(data as unknown as ProfileRow, email, email ? await myStudentId() : "");
   },
   async getProfileByUsername(username) {
     const { data, error } = await getSupabase()
@@ -119,7 +130,14 @@ const supabaseProfileService: ProfileService = {
     // 23505 = unique violation, i.e. the username is taken.
     if (dbError?.code === "23505") throw new Error("This username is already taken.");
     if (dbError) throw dbError;
-    return rowToProfile(data as unknown as ProfileRow, await emailIfMine(userId));
+    const studentId = update.studentId.trim();
+    if (studentId !== (await myStudentId())) {
+      const { error: idError } = await getSupabase().rpc("set_my_student_id", {
+        new_student_id: studentId,
+      });
+      if (idError) throw new Error("Could not save your student ID. Please try again.");
+    }
+    return rowToProfile(data as unknown as ProfileRow, await emailIfMine(userId), studentId);
   },
   async uploadAvatar(userId, image) {
     // New file name each time, so browsers don't show the old cached picture.

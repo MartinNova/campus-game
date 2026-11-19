@@ -9,10 +9,12 @@ import {
   studyProgress,
   validatePassword,
   validateProfileUpdate,
+  validateStudentId,
   validateUsername,
 } from "./profile-rules";
 
 const update = (overrides: Partial<ProfileUpdate> = {}): ProfileUpdate => ({
+  studentId: "",
   username: "till.f",
   firstName: "Till",
   lastName: "",
@@ -88,5 +90,19 @@ describe("countries and initials", () => {
   it("falls back to the username", () => {
     expect(initials("Till", "Fassbender")).toBe("TF");
     expect(initials("", "", "till.f")).toBe("TI");
+  });
+});
+
+describe("validateStudentId", () => {
+  it("accepts a Nova student number or nothing", () => {
+    expect(validateStudentId("")).toBeNull();
+    expect(validateStudentId("79109")).toBeNull();
+  });
+
+  it("rejects letters, too short and too long numbers", () => {
+    expect(validateStudentId("79a09")).toMatch(/numbers only/);
+    expect(validateStudentId("123")).toMatch(/numbers only/);
+    expect(validateStudentId("12345678901")).toMatch(/numbers only/);
+    expect(validateProfileUpdate(update({ studentId: "abc" }))).toMatch(/Student ID/);
   });
 });

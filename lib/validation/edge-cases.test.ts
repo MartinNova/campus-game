@@ -35,6 +35,7 @@ describe("accounts", () => {
   });
 
   const profile = (changes: Partial<ProfileUpdate> = {}): ProfileUpdate => ({
+    studentId: "",
     username: "till.f",
     firstName: "Till",
     lastName: "",

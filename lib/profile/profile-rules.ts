@@ -27,10 +27,18 @@ export function validatePassword(password: string): string | null {
 }
 
 /** Returns an error message, or null if the profile can be saved. */
+/** Nova student numbers are digits only, e.g. "79109". Empty is fine (not everyone has one yet). */
+export function validateStudentId(studentId: string): string | null {
+  if (!studentId) return null;
+  return /^\d{4,10}$/.test(studentId) ? null : "Student ID: numbers only, e.g. 79109.";
+}
+
 export function validateProfileUpdate(update: ProfileUpdate): string | null {
   const usernameError = validateUsername(update.username);
   if (usernameError) return `Username: ${usernameError}`;
   if (!update.firstName.trim()) return "Please enter your first name.";
+  const studentIdError = validateStudentId(update.studentId);
+  if (studentIdError) return studentIdError;
   if (update.bio.length > BIO_MAX_LENGTH)
     return `Keep your intro under ${BIO_MAX_LENGTH} characters.`;
   if (update.studyStart && update.studyEnd && update.studyEnd < update.studyStart)
