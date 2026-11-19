@@ -1,12 +1,14 @@
 import { NextResponse, type NextRequest } from "next/server";
 import { isAllowedEmail } from "@/lib/auth/nova-account";
+import { safeNextPath } from "@/lib/auth/password-reset";
 import { ALLOWED_EMAIL_DOMAINS, isSupabaseConfigured } from "@/lib/supabase/config";
 import { getSupabaseServer } from "@/lib/supabase/server";
 
 /**
  * Links from Supabase land here: the confirmation e-mail after sign-up, an
- * e-mail change, or the Microsoft sign-in. We swap the one-time code for a
- * session cookie, check the e-mail domain (if restricted) and open your area.
+ * e-mail change, a password reset or the Microsoft sign-in. We swap the one-time
+ * code for a session cookie, check the e-mail domain (if restricted) and open
+ * ?next= (only paths inside the app) or your area.
  */
 export async function GET(request: NextRequest) {
   const { searchParams, origin } = request.nextUrl;
@@ -24,5 +26,5 @@ export async function GET(request: NextRequest) {
     return fail("not_allowed");
   }
 
-  return NextResponse.redirect(`${origin}/profile`);
+  return NextResponse.redirect(`${origin}${safeNextPath(searchParams.get("next"))}`);
 }
