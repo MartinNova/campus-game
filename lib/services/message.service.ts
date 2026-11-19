@@ -1,33 +1,20 @@
-import {
-  fileTypeOf,
-  MAX_DEMO_FILE_BYTES,
-  MAX_FILE_BYTES,
-  safeFileName,
-  validateFile,
-} from "@/lib/messages/attachments";
+import { MAX_DEMO_FILE_BYTES, MAX_FILE_BYTES, validateFile } from "@/lib/messages/attachments";
 import { validateMessage } from "@/lib/messages/messages";
 import { readJSON, writeJSON } from "@/lib/storage";
 import { getSupabase } from "@/lib/supabase/client";
 import { AUTH_MODE } from "@/lib/supabase/config";
-import type { Message, MessageFile, MessageService } from "@/types/messages";
+import type { Message, MessageService } from "@/types/messages";
+import {
+  attachmentToLocal,
+  FILE_BUCKET,
+  fileFromRow,
+  IMAGE_BUCKET,
+  signedUrls,
+  uploadAttachment,
+} from "./chat-files";
 import { hasSession } from "./user.service";
 
 const MESSAGES_KEY = "messages";
-/** Private bucket: <sender id>/<recipient id>/<message id>.jpg, readable only by those two. */
-const IMAGE_BUCKET = "message-images";
-/** Private bucket: <sender id>/<recipient id>/<message id>/<file name>, readable only by those two. */
-const FILE_BUCKET = "message-files";
-/** How long a picture or file link stays valid; the chat reloads long before that. */
-const SIGNED_URL_SECONDS = 60 * 60;
-
-function toDataUrl(blob: Blob): Promise<string> {
-  return new Promise((resolve, reject) => {
-    const reader = new FileReader();
-    reader.onload = () => resolve(reader.result as string);
-    reader.onerror = () => reject(new Error("Could not read the file."));
-    reader.readAsDataURL(blob);
-  });
-}
 const listeners = new Set<() => void>();
 
 // Messages saved before pictures and files existed lack those fields.
@@ -67,16 +54,7 @@ const localMessageService: MessageService = {
       senderId: userId,
       recipientId: otherUserId,
       body: body.trim(),
-      imageUrl: attachment?.kind === "image" ? await toDataUrl(attachment.blob) : null,
-      file:
-        attachment?.kind === "file"
-          ? {
-              url: await toDataUrl(attachment.file),
-              name: attachment.file.name,
-              size: attachment.file.size,
-              type: fileTypeOf(attachment.file)!,
-            }
-          : null,
+      ...(await attachmentToLocal(attachment)),
       createdAt: new Date().toISOString(),
       readAt: null,
     };
@@ -120,19 +98,6 @@ interface MessageRow {
   read_at: string | null;
 }
 
-/** Signed links for the given paths in one request; files download under their own name. */
-async function signedUrls(bucket: string, paths: (string | null)[], download = false) {
-  const wanted = paths.filter((p): p is string => Boolean(p));
-  const urls = new Map<string, string>();
-  if (wanted.length === 0) return urls;
-  const { data } = await getSupabase()
-    .storage.from(bucket)
-    .createSignedUrls(wanted, SIGNED_URL_SECONDS, download ? { download: true } : undefined);
-  for (const item of data ?? [])
-    if (item.path && item.signedUrl) urls.set(item.path, item.signedUrl);
-  return urls;
-}
-
 /** Turns rows into messages; picture and file paths become short-lived signed links. */
 async function rowsToMessages(rows: MessageRow[]): Promise<Message[]> {
   const [images, files] = await Promise.all([
@@ -146,24 +111,13 @@ async function rowsToMessages(rows: MessageRow[]): Promise<Message[]> {
       true,
     ),
   ]);
-  const toFile = (row: MessageRow): MessageFile | null => {
-    const url = row.file_path ? files.get(row.file_path) : undefined;
-    return url
-      ? {
-          url,
-          name: row.file_name ?? "File",
-          size: row.file_size ?? 0,
-          type: row.file_type ?? "application/octet-stream",
-        }
-      : null;
-  };
   return rows.map((row) => ({
     id: row.id,
     senderId: row.sender_id,
     recipientId: row.recipient_id,
     body: row.body,
     imageUrl: row.image_path ? (images.get(row.image_path) ?? null) : null,
-    file: toFile(row),
+    file: fileFromRow(row, files),
     createdAt: row.created_at,
     readAt: row.read_at,
   }));
@@ -207,28 +161,7 @@ const supabaseMessageService: MessageService = {
 
     // Upload first, so the message never points to a missing file.
     const id = crypto.randomUUID();
-    const folder = `${userId}/${otherUserId}/${id}`;
-    let columns: Partial<MessageRow> = {};
-    let uploaded: { bucket: string; path: string } | null = null;
-    if (attachment?.kind === "image") {
-      const path = `${folder}.jpg`;
-      const { error } = await getSupabase()
-        .storage.from(IMAGE_BUCKET)
-        .upload(path, attachment.blob, { contentType: "image/jpeg" });
-      if (error) throw new Error("Could not upload the picture. Please try a smaller one.");
-      uploaded = { bucket: IMAGE_BUCKET, path };
-      columns = { image_path: path };
-    } else if (attachment?.kind === "file") {
-      const { file } = attachment;
-      const type = fileTypeOf(file)!;
-      const path = `${folder}/${safeFileName(file.name)}`;
-      const { error } = await getSupabase()
-        .storage.from(FILE_BUCKET)
-        .upload(path, file, { contentType: type });
-      if (error) throw new Error("Could not upload the file. Please try again.");
-      uploaded = { bucket: FILE_BUCKET, path };
-      columns = { file_path: path, file_name: file.name, file_size: file.size, file_type: type };
-    }
+    const { columns, undo } = await uploadAttachment(`${userId}/${otherUserId}/${id}`, attachment);
 
     const { data, error } = await getSupabase()
       .from("messages")
@@ -243,7 +176,7 @@ const supabaseMessageService: MessageService = {
       .select("*")
       .single();
     if (error) {
-      if (uploaded) await getSupabase().storage.from(uploaded.bucket).remove([uploaded.path]);
+      await undo();
       fail(error);
     }
     const [message] = await rowsToMessages([data as MessageRow]);

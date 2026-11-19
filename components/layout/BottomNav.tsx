@@ -7,7 +7,7 @@ import { UnreadBadge } from "@/components/ui/UnreadBadge";
 import { MAIN_NAV, isActive } from "@/lib/config/navigation";
 
 /** Full-screen pages with their own bottom bar (a chat's message field): no tab bar there. */
-const HIDDEN_ON = ["/friends/chat"];
+const HIDDEN_ON = ["/friends/chat", "/friends/group"];
 
 /**
  * Floating glass tab bar (modern iOS). Content scrolls underneath; a soft fade

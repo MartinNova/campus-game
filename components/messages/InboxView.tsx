@@ -1,10 +1,13 @@
 "use client";
 
-import { MessageCircle } from "lucide-react";
+import { MessageCircle, Users } from "lucide-react";
 import Link from "next/link";
+import { GroupAvatar } from "@/components/groups/GroupAvatar";
+import { useMyGroups } from "@/components/groups/useMyGroups";
 import { useCurrentUser } from "@/components/providers/CurrentUserProvider";
 import { Avatar } from "@/components/ui/Avatar";
 import { Card } from "@/components/ui/Card";
+import { groupConversations as groupChats } from "@/lib/groups/groups";
 import {
   badgeLabel,
   formatMessageTime,
@@ -13,10 +16,22 @@ import {
 } from "@/lib/messages/messages";
 import { useMyMessages } from "./useMyMessages";
 
-/** All your chats, most recent first. */
+interface InboxRow {
+  key: string;
+  href: string;
+  avatar: React.ReactNode;
+  name: string;
+  /** ISO timestamp used for sorting and the time on the right. */
+  time: string;
+  preview: string;
+  unread: number;
+}
+
+/** All your chats, direct and groups, most recent first. */
 export function InboxView() {
   const { user, users, ready } = useCurrentUser();
   const messages = useMyMessages(user?.id);
+  const groups = useMyGroups(user?.id);
 
   if (ready && !user) {
     return (
@@ -28,81 +43,130 @@ export function InboxView() {
       </Card>
     );
   }
-  if (!user || !messages) {
+  if (!user || !messages || !groups) {
     return <div className="bg-border h-48 animate-pulse rounded-2xl" aria-busy="true" />;
   }
 
-  const chats = groupConversations(messages, user.id);
-  if (chats.length === 0) {
-    return (
-      <Card className="flex flex-col items-center gap-3 py-10 text-center">
-        <span className="bg-brand text-brand-foreground flex size-14 items-center justify-center rounded-2xl">
-          <MessageCircle className="size-7" aria-hidden />
-        </span>
-        <p className="font-semibold">No messages yet</p>
-        <p className="text-muted max-w-xs text-sm">
-          Find someone in Friends and say hi, or message the person behind a room or padel match.
-        </p>
-        <Link
-          href="/friends"
-          className="bg-brand text-brand-foreground inline-flex h-10 items-center rounded-xl px-4 text-sm font-medium hover:opacity-90"
-        >
-          Find students
-        </Link>
-      </Card>
-    );
-  }
+  const firstName = (id: string) => {
+    if (id === user.id) return "You";
+    const u = users.find((x) => x.id === id);
+    return u?.firstName || (u?.username ? `@${u.username}` : "Someone");
+  };
 
-  const now = new Date();
-  return (
-    <ul className="grid gap-2">
-      {chats.map(({ otherUserId, last, unread }) => {
-        const other = users.find((u) => u.id === otherUserId);
-        const name = other
+  const direct: InboxRow[] = groupConversations(messages, user.id).map(
+    ({ otherUserId, last, unread }) => {
+      const other = users.find((u) => u.id === otherUserId);
+      return {
+        key: `u:${otherUserId}`,
+        href: other?.username ? `/friends/chat?u=${other.username}` : "/friends/messages",
+        avatar: (
+          <Avatar
+            firstName={other?.firstName ?? "?"}
+            lastName={other?.lastName ?? ""}
+            username={other?.username}
+            url={other?.avatarUrl}
+            size={52}
+          />
+        ),
+        name: other
           ? [other.firstName, other.lastName].filter(Boolean).join(" ") || `@${other.username}`
-          : "Student";
-        const href = other?.username ? `/friends/chat?u=${other.username}` : "/friends/messages";
-        return (
-          <li key={otherUserId}>
-            <Link
-              href={href}
-              className="border-border bg-surface hover:border-brand flex items-center gap-3 rounded-2xl border p-3 shadow-sm transition-colors"
-            >
-              <Avatar
-                firstName={other?.firstName ?? "?"}
-                lastName={other?.lastName ?? ""}
-                username={other?.username}
-                url={other?.avatarUrl}
-                size={48}
-              />
-              <span className="min-w-0 flex-1">
-                <span className="flex items-baseline justify-between gap-2">
-                  <span className={`truncate ${unread ? "font-bold" : "font-semibold"}`}>
-                    {name}
-                  </span>
-                  <span className="text-muted shrink-0 text-xs">
-                    {formatMessageTime(last.createdAt, now)}
-                  </span>
-                </span>
-                <span className="flex items-center justify-between gap-2">
-                  <span
-                    className={`truncate text-sm ${unread ? "text-foreground font-medium" : "text-muted"}`}
-                  >
-                    {last.senderId === user.id ? "You: " : ""}
-                    {messagePreview(last)}
-                  </span>
-                  {unread > 0 && (
-                    <span className="flex h-5 min-w-5 shrink-0 items-center justify-center rounded-full bg-[#d70015] px-1.5 text-[12px] font-semibold text-white tabular-nums">
-                      {badgeLabel(unread)}
-                      <span className="sr-only"> unread</span>
+          : "Student",
+        time: last.createdAt,
+        preview: `${last.senderId === user.id ? "You: " : ""}${messagePreview(last)}`,
+        unread,
+      };
+    },
+  );
+
+  const grouped: InboxRow[] = groupChats(groups.groups, groups.messages, user.id).map(
+    ({ group, last, unread }) => ({
+      key: `g:${group.id}`,
+      href: `/friends/group?id=${group.id}`,
+      avatar: <GroupAvatar name={group.name} photoUrl={group.photoUrl} size={52} />,
+      name: group.name,
+      time: last?.createdAt ?? group.createdAt,
+      preview: last
+        ? `${firstName(last.senderId)}: ${messagePreview(last)}`
+        : group.createdBy === user.id
+          ? "You created this group"
+          : `${firstName(group.createdBy)} added you`,
+      unread,
+    }),
+  );
+
+  const rows = [...direct, ...grouped].sort((a, b) => b.time.localeCompare(a.time));
+  const now = new Date();
+
+  return (
+    <div className="flex flex-col gap-4">
+      <Link
+        href="/friends/groups/new"
+        className="bg-surface focus-visible:outline-brand active:bg-brand/5 flex items-center gap-3 rounded-3xl p-3 transition focus-visible:outline-2 active:scale-[0.98]"
+      >
+        <span className="bg-brand text-brand-foreground flex size-10 items-center justify-center rounded-full">
+          <Users className="size-5" aria-hidden />
+        </span>
+        <span className="text-brand text-[17px] font-semibold">New group</span>
+      </Link>
+
+      {rows.length === 0 ? (
+        <Card className="flex flex-col items-center gap-3 py-10 text-center">
+          <span className="bg-brand text-brand-foreground flex size-14 items-center justify-center rounded-2xl">
+            <MessageCircle className="size-7" aria-hidden />
+          </span>
+          <p className="font-semibold">No messages yet</p>
+          <p className="text-muted max-w-xs text-sm">
+            Find someone in Friends and say hi, start a group, or message the person behind a room
+            or padel match.
+          </p>
+          <Link
+            href="/friends"
+            className="bg-brand text-brand-foreground inline-flex h-10 items-center rounded-xl px-4 text-sm font-medium hover:opacity-90"
+          >
+            Find students
+          </Link>
+        </Card>
+      ) : (
+        <ul className="bg-surface overflow-hidden rounded-3xl">
+          {rows.map((row) => (
+            <li key={row.key} className="group">
+              <Link
+                href={row.href}
+                className="focus-visible:outline-brand active:bg-brand/5 flex items-center gap-3 pl-3 transition-colors focus-visible:outline-2 focus-visible:-outline-offset-2"
+              >
+                {row.avatar}
+                <span className="border-border flex min-w-0 flex-1 flex-col justify-center border-b py-3 pr-4 group-last:border-b-0">
+                  <span className="flex items-baseline justify-between gap-2">
+                    <span
+                      className={`truncate text-[17px] ${row.unread ? "font-bold" : "font-semibold"}`}
+                    >
+                      {row.name}
                     </span>
-                  )}
+                    <span
+                      className={`shrink-0 text-xs ${row.unread ? "font-semibold text-[#d70015] dark:text-[#ff6961]" : "text-muted"}`}
+                    >
+                      {formatMessageTime(row.time, now)}
+                    </span>
+                  </span>
+                  <span className="flex items-center justify-between gap-2">
+                    <span
+                      className={`truncate text-[15px] ${row.unread ? "text-foreground font-medium" : "text-muted"}`}
+                    >
+                      {row.preview}
+                    </span>
+                    {row.unread > 0 && (
+                      <span className="flex h-5 min-w-5 shrink-0 items-center justify-center rounded-full bg-[#d70015] px-1.5 text-[12px] font-semibold text-white tabular-nums">
+                        {badgeLabel(row.unread)}
+                        <span className="sr-only"> unread</span>
+                      </span>
+                    )}
+                  </span>
                 </span>
-              </span>
-            </Link>
-          </li>
-        );
-      })}
-    </ul>
+              </Link>
+            </li>
+          ))}
+        </ul>
+      )}
+    </div>
   );
 }
