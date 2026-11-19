@@ -5,24 +5,28 @@ Group project for **Introduction to Programming** (NOVA Master, S1).
 
 ## Features
 
-Current module: **Sport**
+Live at **https://nova-app-orcin-tau.vercel.app** (scan `docs/nova-app-qr.png`). Sign in with
+e-mail and password, or look around without an account.
 
-| Feature            | Status      | Description                                                                                            |
-| ------------------ | ----------- | ------------------------------------------------------------------------------------------------------ |
-| Padel match finder | in progress | Create, filter, join and leave matches (mock data / localStorage)                                      |
-| Surf forecast      | in progress | Waves, wind and temperature for spots near Lisbon (Open-Meteo, no API key) with a traffic-light rating |
-| Gym                | placeholder | Mock data only; real data once usage rights are cleared                                                |
+| Module    | What you can do                                                                                                                                                         |
+| --------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Home      | Your day: next lecture, surf in Carcavelos, food, padel and to-dos at a glance                                                                                          |
+| Sport     | **Padel**: post a booked court, ask to join, organiser accepts or declines (live). **Running**: clubs and runs. **Surf**: forecast and schools. **Gym**, **Yoga**       |
+| Study Hub | **Timetable** (weekly lectures, `.ics` import, holidays), **To-dos** (lists, board), **Deadlines & Payments** (tuition dates from netPA with calendar reminders)        |
+| Friends   | Find Nova students by programme and sport, view profiles, **direct messages** with unread count                                                                         |
+| Campus    | **Getting to campus** (next CP trains from Carcavelos/Oeiras, your train after class, Uber, map), **Rooms & flats** (listings with photos), Food Options, library links |
+| Account   | Profile with picture, programme and links; settings; change e-mail/password; delete account                                                                             |
 
-Already in place: app shell with bottom navigation, demo login (account switcher with team and demo accounts),
-shared UI components and placeholder pages for Timetable, Friends and Canteen.
+How it is built and why: **[docs/ARCHITECTURE.md](docs/ARCHITECTURE.md)**.
 
 ## Tech stack
 
 - Next.js (App Router), React, TypeScript
 - Tailwind CSS, lucide-react icons
 - ESLint + Prettier, GitHub Actions CI
-- Data: mock data / localStorage behind a service layer (`lib/services`); Supabase for
-  accounts, profiles and pictures when configured ([docs/accounts.md](docs/accounts.md))
+- Supabase: Auth, Postgres with Row Level Security, Storage, Realtime ([docs/accounts.md](docs/accounts.md))
+- Service layer (`lib/services`) with a demo mode (localStorage) when Supabase isn't configured
+- Vercel (deploys `main` automatically)
 
 ## Setup
 
@@ -74,23 +78,23 @@ The same rules are enforced a second time by the database (check constraints and
 ## Folder structure
 
 ```
-app/                    routes
-  sport/                /sport overview
-    padel/ surf/ gym/   sport sub-modules
-  timetable/ friends/ canteen/   later modules (placeholders)
+app/                    routes (one folder per URL), e.g. sport/padel, campus/rooms, friends/chat
 components/
-  ui/                   shared building blocks (Card, Button, Badge, ...)
-  layout/               header, bottom nav, account switcher
-  providers/            React context (current user)
-  sport/<module>/       module-specific components
+  ui/ layout/ providers/  shared building blocks, header and tab bar, current user
+  <module>/             UI per module (sport/padel, rooms, messages, transport, ...)
 lib/
-  config/               app name, navigation (single source of truth)
-  services/             data access layer (mock now, Supabase later)
-  api/                  clients for external APIs (Open-Meteo)
-  storage.ts            safe localStorage helper
-types/                  TypeScript types and service contracts per module
-data/                   mock data
+  services/             data access per module: Supabase or localStorage (demo)
+  <module>/             pure rules per module (validation, sorting, calculations) + tests
+  supabase/             Supabase clients and config
+  security/ validation/ cross-cutting tests (RLS, secrets, boundary values)
+types/                  data shapes and service contracts per module
+data/                   demo data, generated train timetable
+supabase/migrations/    database tables, constraints and RLS policies (run in order)
+scripts/                build-train-timetable.mjs (CP GTFS -> data/trains.json)
+docs/                   ARCHITECTURE.md, accounts.md (Supabase setup), QR code
 ```
+
+Details per layer and why: [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md).
 
 ## Team workflow
 
@@ -99,11 +103,8 @@ See [CONTRIBUTING.md](CONTRIBUTING.md) for which files belong to which module.
 
 ## Roadmap
 
-1. Sport module: padel, surf, gym
-2. Timetable tracker
-3. Friends and meet-ups
-4. Canteen menu
-5. Supabase auth and database: accounts, profiles and settings ([docs/accounts.md](docs/accounts.md)); Microsoft sign-in prepared
+Done: sport, study hub, friends with chat, campus, accounts, deployment. Next steps and known
+limits are listed in [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md#5-limits-honest-list).
 
 ## Team
 
