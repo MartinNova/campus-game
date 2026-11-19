@@ -1,4 +1,4 @@
-# Campus Perfect Match
+# Nova Life
 
 Web app that makes campus life at **Nova SBE (Lisbon)** more social and better organised.
 Group project for **Introduction to Programming** (NOVA Master, S1).
