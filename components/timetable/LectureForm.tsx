@@ -5,6 +5,7 @@ import { Button } from "@/components/ui/Button";
 import { WEEKDAYS } from "@/lib/timetable/dates";
 import { normalizeUrl } from "@/lib/timetable/links";
 import { NOVA_TERMS } from "@/lib/timetable/terms";
+import { validateLecture } from "@/lib/timetable/validation";
 import type { NewLecture } from "@/types/timetable";
 
 const INPUT =
@@ -50,20 +51,31 @@ export function LectureForm({
       }
       lecture.moodleUrl = url;
     }
-    if (lecture.end <= lecture.start) {
-      setError("End time must be after start time.");
+    const problem = validateLecture(lecture);
+    if (problem) {
+      setError(problem);
       return;
     }
     setError(null);
-    await onSubmit(lecture);
-    form.reset();
+    try {
+      await onSubmit(lecture);
+      form.reset();
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Could not save the lecture.");
+    }
   }
 
   return (
     <form onSubmit={handleSubmit} className="space-y-3">
       <label className="block text-sm">
         <span className="mb-1 block font-medium">Course</span>
-        <input name="title" required placeholder="e.g. Corporate Finance" className={INPUT} />
+        <input
+          name="title"
+          required
+          maxLength={100}
+          placeholder="e.g. Corporate Finance"
+          className={INPUT}
+        />
       </label>
 
       <div className="grid grid-cols-3 gap-2">
@@ -89,7 +101,7 @@ export function LectureForm({
 
       <label className="block text-sm">
         <span className="mb-1 block font-medium">Room (optional)</span>
-        <input name="location" placeholder="e.g. B-201" className={INPUT} />
+        <input name="location" maxLength={100} placeholder="e.g. B-201" className={INPUT} />
       </label>
 
       <label className="block text-sm">
