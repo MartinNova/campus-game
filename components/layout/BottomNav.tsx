@@ -2,7 +2,12 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
+import { useUnreadMessages } from "@/components/messages/useUnreadMessages";
+import { UnreadBadge } from "@/components/ui/UnreadBadge";
 import { MAIN_NAV, isActive } from "@/lib/config/navigation";
+
+/** Full-screen pages with their own bottom bar (a chat's message field): no tab bar there. */
+const HIDDEN_ON = ["/friends/chat"];
 
 /**
  * Floating glass tab bar (modern iOS). Content scrolls underneath; a soft fade
@@ -10,6 +15,8 @@ import { MAIN_NAV, isActive } from "@/lib/config/navigation";
  */
 export function BottomNav() {
   const pathname = usePathname();
+  const unread = useUnreadMessages();
+  if (HIDDEN_ON.includes(pathname)) return null;
 
   return (
     <>
@@ -35,7 +42,10 @@ export function BottomNav() {
                       : "text-foreground/75 hover:text-foreground font-medium"
                   }`}
                 >
-                  <Icon className="size-6" strokeWidth={active ? 2.4 : 1.8} aria-hidden />
+                  <span className="relative">
+                    <Icon className="size-6" strokeWidth={active ? 2.4 : 1.8} aria-hidden />
+                    {href === "/friends" && <UnreadBadge count={unread} className="ring-0" />}
+                  </span>
                   {label}
                 </Link>
               </li>

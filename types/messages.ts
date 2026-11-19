@@ -9,7 +9,10 @@ export interface Message {
   id: string;
   senderId: string;
   recipientId: string;
+  /** Text; may be empty when the message is a picture. */
   body: string;
+  /** Picture to show (signed URL, or a data URL in demo mode); null = text only. */
+  imageUrl: string | null;
   /** ISO timestamp. */
   createdAt: string;
   /** When the recipient opened the chat; null = unread. */
@@ -29,7 +32,8 @@ export interface MessageService {
   listMine(userId: string): Promise<Message[]>;
   /** The chat between you and one other person, oldest first. */
   listThread(userId: string, otherUserId: string): Promise<Message[]>;
-  send(userId: string, otherUserId: string, body: string): Promise<Message>;
+  /** Sends text, a picture (already resized JPEG), or both. */
+  send(userId: string, otherUserId: string, body: string, image?: Blob): Promise<Message>;
   /** Marks everything the other person sent you as read. */
   markRead(userId: string, otherUserId: string): Promise<void>;
   /** Calls `listener` when a message to or from you arrives. Returns an unsubscribe function. */
