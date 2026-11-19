@@ -1,4 +1,5 @@
-import { CalendarClock, GraduationCap, IdCard, Languages, Link2 } from "lucide-react";
+import { CalendarClock, GraduationCap, IdCard, Languages } from "lucide-react";
+import Image from "next/image";
 import { Avatar } from "@/components/ui/Avatar";
 import { Badge } from "@/components/ui/Badge";
 import { Card } from "@/components/ui/Card";
@@ -77,7 +78,7 @@ export function ProfileCard({ profile: p, today }: ProfileCardProps) {
         </div>
       )}
 
-      {(p.languages.length > 0 || p.availabilityDays.length > 0 || p.instagram || p.linkedin) && (
+      {(p.languages.length > 0 || p.availabilityDays.length > 0) && (
         <dl className="text-muted grid gap-2 text-sm">
           {p.languages.length > 0 && (
             <div className="flex gap-2">
@@ -99,32 +100,39 @@ export function ProfileCard({ profile: p, today }: ProfileCardProps) {
               </dd>
             </div>
           )}
-          {(p.instagram || p.linkedin) && (
-            <div className="flex gap-2">
-              <dt>
-                <Link2 className="size-4" aria-label="Links" />
-              </dt>
-              <dd className="flex gap-3">
-                {p.instagram && (
-                  <a
-                    href={`https://instagram.com/${p.instagram}`}
-                    target="_blank"
-                    rel="noreferrer"
-                    className="underline"
-                  >
-                    Instagram
-                  </a>
-                )}
-                {p.linkedin && (
-                  <a href={p.linkedin} target="_blank" rel="noreferrer" className="underline">
-                    LinkedIn
-                  </a>
-                )}
-              </dd>
-            </div>
-          )}
         </dl>
       )}
+
+      {(p.instagram || p.linkedin) && (
+        <div className="flex gap-3">
+          {p.instagram && (
+            <SocialLink
+              href={`https://instagram.com/${p.instagram}`}
+              icon="/icons/instagram.png"
+              label={`Instagram: @${p.instagram}`}
+            />
+          )}
+          {p.linkedin && (
+            <SocialLink href={p.linkedin} icon="/icons/linkedin.png" label="LinkedIn profile" />
+          )}
+        </div>
+      )}
     </Card>
+  );
+}
+
+/** App-style icon that opens the profile in Instagram / LinkedIn (new tab). */
+function SocialLink({ href, icon, label }: { href: string; icon: string; label: string }) {
+  return (
+    <a
+      href={href}
+      target="_blank"
+      rel="noreferrer"
+      aria-label={label}
+      title={label}
+      className="focus-visible:outline-brand rounded-[10px] transition focus-visible:outline-2 focus-visible:outline-offset-2 active:scale-90"
+    >
+      <Image src={icon} alt="" width={36} height={36} className="size-9 rounded-[10px]" />
+    </a>
   );
 }
