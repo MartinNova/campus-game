@@ -5,6 +5,17 @@
 
 export const MAX_MESSAGE_LENGTH = 1000;
 
+/** A file sent in a chat (not a picture). */
+export interface MessageFile {
+  /** Download link (signed URL, or a data URL in demo mode). */
+  url: string;
+  name: string;
+  /** Bytes. */
+  size: number;
+  /** MIME type, e.g. "application/pdf". */
+  type: string;
+}
+
 export interface Message {
   id: string;
   senderId: string;
@@ -13,6 +24,8 @@ export interface Message {
   body: string;
   /** Picture to show (signed URL, or a data URL in demo mode); null = text only. */
   imageUrl: string | null;
+  /** Attached file; null = none. */
+  file: MessageFile | null;
   /** ISO timestamp. */
   createdAt: string;
   /** When the recipient opened the chat; null = unread. */
@@ -27,13 +40,20 @@ export interface Conversation {
   unread: number;
 }
 
+export type Attachment = { kind: "image"; blob: Blob } | { kind: "file"; file: File };
+
 export interface MessageService {
   /** Your latest messages (sent and received), newest first. */
   listMine(userId: string): Promise<Message[]>;
   /** The chat between you and one other person, oldest first. */
   listThread(userId: string, otherUserId: string): Promise<Message[]>;
-  /** Sends text, a picture (already resized JPEG), or both. */
-  send(userId: string, otherUserId: string, body: string, image?: Blob): Promise<Message>;
+  /** Sends text and/or one attachment: a picture (already resized JPEG) or a file. */
+  send(
+    userId: string,
+    otherUserId: string,
+    body: string,
+    attachment?: Attachment,
+  ): Promise<Message>;
   /** Marks everything the other person sent you as read. */
   markRead(userId: string, otherUserId: string): Promise<void>;
   /** Calls `listener` when a message to or from you arrives. Returns an unsubscribe function. */

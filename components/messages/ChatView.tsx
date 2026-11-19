@@ -1,20 +1,33 @@
 "use client";
 
-import { ImagePlus, SendHorizontal, X } from "lucide-react";
+import { FileText, ImagePlus, Paperclip, SendHorizontal, X } from "lucide-react";
 import Link from "next/link";
 import { useSearchParams } from "next/navigation";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { useCurrentUser } from "@/components/providers/CurrentUserProvider";
 import { Avatar } from "@/components/ui/Avatar";
 import { Card } from "@/components/ui/Card";
+import {
+  FILE_ACCEPT,
+  formatFileSize,
+  MAX_DEMO_FILE_BYTES,
+  MAX_FILE_BYTES,
+  validateFile,
+} from "@/lib/messages/attachments";
 import { formatMessageTime } from "@/lib/messages/messages";
 import { resizePhoto } from "@/lib/rooms/photos";
 import { messageService } from "@/lib/services/message.service";
 import { AUTH_MODE } from "@/lib/supabase/config";
-import { MAX_MESSAGE_LENGTH, type Message } from "@/types/messages";
+import { MAX_MESSAGE_LENGTH, type Attachment, type Message } from "@/types/messages";
+import { FileCard } from "./FileCard";
+import { MessageText } from "./MessageText";
 
-/** Demo mode keeps pictures in the browser's small storage, so they are kept smaller there. */
+/** Demo mode keeps attachments in the browser's small storage, so they are kept smaller there. */
 const MAX_IMAGE_SIDE = AUTH_MODE === "accounts" ? 1600 : 1024;
+const MAX_BYTES = AUTH_MODE === "accounts" ? MAX_FILE_BYTES : MAX_DEMO_FILE_BYTES;
+
+/** What's waiting to be sent: a resized picture (with preview link) or a file. */
+type Pending = { kind: "image"; blob: Blob; url: string } | { kind: "file"; file: File };
 
 /** One chat with another student (?u=username), live. */
 export function ChatView() {
@@ -26,11 +39,13 @@ export function ChatView() {
 
   const [thread, setThread] = useState<{ key: string; messages: Message[] } | null>(null);
   const [draft, setDraft] = useState("");
-  const [image, setImage] = useState<{ blob: Blob; url: string } | null>(null);
+  const [pending, setPending] = useState<Pending | null>(null);
   const [viewing, setViewing] = useState<string | null>(null);
   const [sending, setSending] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const imageInput = useRef<HTMLInputElement>(null);
   const fileInput = useRef<HTMLInputElement>(null);
+  const knownUsernames = new Set(users.map((u) => u.username).filter((u): u is string => !!u));
   const key = `${userId}:${otherId}`;
 
   const reload = useCallback(() => {
@@ -59,7 +74,10 @@ export function ChatView() {
   }, [count]);
 
   // Free the preview's memory when it's replaced or removed.
-  useEffect(() => (image ? () => URL.revokeObjectURL(image.url) : undefined), [image]);
+  useEffect(
+    () => (pending?.kind === "image" ? () => URL.revokeObjectURL(pending.url) : undefined),
+    [pending],
+  );
 
   // Escape closes the full-screen picture.
   useEffect(() => {
@@ -76,21 +94,36 @@ export function ChatView() {
     setError(null);
     try {
       const blob = await resizePhoto(file, MAX_IMAGE_SIDE);
-      setImage({ blob, url: URL.createObjectURL(blob) });
+      setPending({ kind: "image", blob, url: URL.createObjectURL(blob) });
     } catch (err) {
       setError(err instanceof Error ? err.message : "Could not use this picture.");
     }
   }
 
+  function pickFile(e: React.ChangeEvent<HTMLInputElement>) {
+    const file = e.target.files?.[0];
+    e.target.value = "";
+    if (!file) return;
+    const problem = validateFile(file, MAX_BYTES);
+    setError(problem);
+    if (!problem) setPending({ kind: "file", file });
+  }
+
   async function send(e?: React.FormEvent) {
     e?.preventDefault();
-    if (!userId || !otherId || sending || (!draft.trim() && !image)) return;
+    if (!userId || !otherId || sending || (!draft.trim() && !pending)) return;
     setSending(true);
     setError(null);
     try {
-      await messageService.send(userId, otherId, draft, image?.blob);
+      const attachment: Attachment | undefined =
+        pending?.kind === "image"
+          ? { kind: "image", blob: pending.blob }
+          : pending?.kind === "file"
+            ? { kind: "file", file: pending.file }
+            : undefined;
+      await messageService.send(userId, otherId, draft, attachment);
       setDraft("");
-      setImage(null);
+      setPending(null);
       reload();
     } catch (err) {
       setError(err instanceof Error ? err.message : "Could not send the message.");
@@ -129,7 +162,7 @@ export function ChatView() {
 
   const name = [other.firstName, other.lastName].filter(Boolean).join(" ") || `@${other.username}`;
   const now = new Date();
-  const canSend = !sending && (Boolean(draft.trim()) || Boolean(image));
+  const canSend = !sending && (Boolean(draft.trim()) || Boolean(pending));
 
   return (
     <div className="grid grid-cols-1 gap-3">
@@ -176,7 +209,7 @@ export function ChatView() {
                     mine
                       ? "bg-brand text-brand-foreground justify-self-end rounded-br-md"
                       : "bg-surface justify-self-start rounded-bl-md"
-                  } ${m.imageUrl ? "p-1" : "px-3.5 py-2"}`}
+                  } ${m.imageUrl || m.file ? "p-1" : "px-3.5 py-2"}`}
                 >
                   {m.imageUrl && (
                     <button
@@ -194,8 +227,11 @@ export function ChatView() {
                       />
                     </button>
                   )}
+                  {m.file && <FileCard file={m.file} mine={mine} />}
                   {m.body && (
-                    <span className={m.imageUrl ? "px-2.5 pt-1.5 pb-1" : ""}>{m.body}</span>
+                    <span className={m.imageUrl || m.file ? "px-2.5 pt-1.5 pb-1" : ""}>
+                      <MessageText text={m.body} knownUsernames={knownUsernames} mine={mine} />
+                    </span>
                   )}
                 </span>
               </li>
@@ -219,27 +255,43 @@ export function ChatView() {
         className="glass fixed inset-x-0 bottom-0 z-20 border-x-0 border-b-0 pb-[calc(env(safe-area-inset-bottom)+8px)]"
       >
         <div className="mx-auto flex max-w-2xl flex-col gap-2 px-4 pt-2">
-          {image && (
-            <div className="relative w-fit">
-              {/* eslint-disable-next-line @next/next/no-img-element -- local preview */}
-              <img
-                src={image.url}
-                alt="Picture to send"
-                className="h-20 w-auto max-w-40 rounded-xl object-cover"
-              />
+          {pending && (
+            <div className="relative w-fit max-w-full">
+              {pending.kind === "image" ? (
+                /* eslint-disable-next-line @next/next/no-img-element -- local preview */
+                <img
+                  src={pending.url}
+                  alt="Picture to send"
+                  className="h-20 w-auto max-w-40 rounded-xl object-cover"
+                />
+              ) : (
+                <span className="bg-surface flex min-w-0 items-center gap-2.5 rounded-xl py-2 pr-4 pl-2">
+                  <span className="bg-brand text-brand-foreground flex size-9 shrink-0 items-center justify-center rounded-lg">
+                    <FileText className="size-5" aria-hidden />
+                  </span>
+                  <span className="min-w-0">
+                    <span className="block truncate text-[15px] font-medium">
+                      {pending.file.name}
+                    </span>
+                    <span className="text-muted block text-[13px]">
+                      {formatFileSize(pending.file.size)}
+                    </span>
+                  </span>
+                </span>
+              )}
               <button
                 type="button"
-                onClick={() => setImage(null)}
-                aria-label="Remove picture"
+                onClick={() => setPending(null)}
+                aria-label={pending.kind === "image" ? "Remove picture" : "Remove file"}
                 className="bg-foreground/80 text-background absolute -top-2 -right-2 flex size-6 items-center justify-center rounded-full"
               >
                 <X className="size-3.5" aria-hidden />
               </button>
             </div>
           )}
-          <div className="flex items-end gap-2">
+          <div className="flex items-end gap-1">
             <input
-              ref={fileInput}
+              ref={imageInput}
               type="file"
               accept="image/*"
               onChange={pickImage}
@@ -247,11 +299,28 @@ export function ChatView() {
               aria-hidden
               tabIndex={-1}
             />
+            <input
+              ref={fileInput}
+              type="file"
+              accept={FILE_ACCEPT}
+              onChange={pickFile}
+              className="hidden"
+              aria-hidden
+              tabIndex={-1}
+            />
             <button
               type="button"
               onClick={() => fileInput.current?.click()}
-              aria-label="Add picture"
+              aria-label="Add file"
               className="text-brand flex size-11 shrink-0 items-center justify-center rounded-full transition active:scale-90 active:opacity-60"
+            >
+              <Paperclip className="size-[22px]" aria-hidden />
+            </button>
+            <button
+              type="button"
+              onClick={() => imageInput.current?.click()}
+              aria-label="Add picture"
+              className="text-brand -ml-1 flex size-11 shrink-0 items-center justify-center rounded-full transition active:scale-90 active:opacity-60"
             >
               <ImagePlus className="size-6" aria-hidden />
             </button>
@@ -272,7 +341,7 @@ export function ChatView() {
               rows={1}
               maxLength={MAX_MESSAGE_LENGTH}
               placeholder={`Message ${other.firstName || name}`}
-              className="border-border bg-surface focus-visible:outline-brand max-h-32 min-h-11 flex-1 resize-none rounded-[22px] border px-4 py-2.5 text-base focus-visible:outline-2"
+              className="border-border bg-surface focus-visible:outline-brand mr-1 max-h-32 min-h-11 min-w-0 flex-1 resize-none rounded-[22px] border px-4 py-2.5 text-base focus-visible:outline-2"
             />
             <button
               type="submit"

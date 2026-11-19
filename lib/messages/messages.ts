@@ -1,9 +1,9 @@
 import { MAX_MESSAGE_LENGTH, type Conversation, type Message } from "@/types/messages";
 
-/** Returns an error message, or null if the message can be sent. A picture needs no text. */
-export function validateMessage(body: string, hasImage = false): string | null {
+/** Returns an error message, or null if the message can be sent. An attachment needs no text. */
+export function validateMessage(body: string, hasAttachment = false): string | null {
   const text = body.trim();
-  if (!text && !hasImage) return "Write a message first.";
+  if (!text && !hasAttachment) return "Write a message first.";
   if (text.length > MAX_MESSAGE_LENGTH)
     return `Messages can have at most ${MAX_MESSAGE_LENGTH} characters.`;
   return null;
@@ -31,10 +31,11 @@ export function unreadCount(messages: Message[], userId: string): number {
   return messages.filter((m) => m.recipientId === userId && !m.readAt).length;
 }
 
-/** Inbox preview for a message: its text, or "Photo" for a picture without text. */
-export function messagePreview(message: Pick<Message, "body" | "imageUrl">): string {
+/** Inbox preview: the text, or "📷 Photo" / "📎 file name" for an attachment without text. */
+export function messagePreview(message: Pick<Message, "body" | "imageUrl" | "file">): string {
   if (message.body.trim()) return message.body;
-  return message.imageUrl ? "📷 Photo" : "";
+  if (message.imageUrl) return "📷 Photo";
+  return message.file ? `📎 ${message.file.name}` : "";
 }
 
 /** Badge text: "1" … "99", then "99+". */
