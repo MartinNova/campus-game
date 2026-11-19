@@ -7,7 +7,7 @@ export const metadata: Metadata = { title: "New group" };
 export default function NewGroupPage() {
   return (
     <>
-      <PageHeader title="New group" backHref="/friends/messages" />
+      <PageHeader title="New group" backHref="/friends" />
       <NewGroupView />
     </>
   );

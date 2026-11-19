@@ -1,6 +1,6 @@
 "use client";
 
-import { FileText, ImagePlus, Paperclip, SendHorizontal, X } from "lucide-react";
+import { Camera, FileText, Image as ImageIcon, Paperclip, SendHorizontal, X } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
 import {
   FILE_ACCEPT,
@@ -26,8 +26,15 @@ interface ComposerProps {
   onSend: (body: string, attachment?: Attachment) => Promise<void>;
 }
 
+/** The attach menu, like WhatsApp: photo library, camera, or a document. */
+const ATTACH_OPTIONS = [
+  { id: "photos", label: "Photos", icon: ImageIcon, tile: "bg-[#0b6e78]" },
+  { id: "camera", label: "Camera", icon: Camera, tile: "bg-[#0b2a4a]" },
+  { id: "document", label: "Document", icon: FileText, tile: "bg-[#7b3fa0]" },
+] as const;
+
 /**
- * Message field with file and picture buttons, fixed to the bottom of the screen
+ * Message field with one paperclip (photos, camera, document), fixed to the bottom of the screen
  * (pages using it hide the tab bar, like WhatsApp and iMessage do in a chat).
  */
 export function Composer({ placeholder, onSend }: ComposerProps) {
@@ -35,8 +42,32 @@ export function Composer({ placeholder, onSend }: ComposerProps) {
   const [pending, setPending] = useState<Pending | null>(null);
   const [sending, setSending] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [menuOpen, setMenuOpen] = useState(false);
   const imageInput = useRef<HTMLInputElement>(null);
+  const cameraInput = useRef<HTMLInputElement>(null);
   const fileInput = useRef<HTMLInputElement>(null);
+  const menu = useRef<HTMLDivElement>(null);
+
+  // The menu closes with Escape or a tap anywhere else.
+  useEffect(() => {
+    if (!menuOpen) return;
+    const onKey = (e: KeyboardEvent) => e.key === "Escape" && setMenuOpen(false);
+    const onPointer = (e: PointerEvent) => {
+      if (!menu.current?.contains(e.target as Node)) setMenuOpen(false);
+    };
+    window.addEventListener("keydown", onKey);
+    window.addEventListener("pointerdown", onPointer);
+    return () => {
+      window.removeEventListener("keydown", onKey);
+      window.removeEventListener("pointerdown", onPointer);
+    };
+  }, [menuOpen]);
+
+  function choose(id: (typeof ATTACH_OPTIONS)[number]["id"]) {
+    setMenuOpen(false);
+    const input = { photos: imageInput, camera: cameraInput, document: fileInput }[id];
+    input.current?.click();
+  }
 
   // Free the preview's memory when it's replaced or removed.
   useEffect(
@@ -145,6 +176,17 @@ export function Composer({ placeholder, onSend }: ComposerProps) {
             aria-hidden
             tabIndex={-1}
           />
+          {/* On phones this opens the camera straight away; on computers it's a file picker. */}
+          <input
+            ref={cameraInput}
+            type="file"
+            accept="image/*"
+            capture="environment"
+            onChange={pickImage}
+            className="hidden"
+            aria-hidden
+            tabIndex={-1}
+          />
           <input
             ref={fileInput}
             type="file"
@@ -154,22 +196,49 @@ export function Composer({ placeholder, onSend }: ComposerProps) {
             aria-hidden
             tabIndex={-1}
           />
-          <button
-            type="button"
-            onClick={() => fileInput.current?.click()}
-            aria-label="Add file"
-            className="text-brand flex size-11 shrink-0 items-center justify-center rounded-full transition active:scale-90 active:opacity-60"
-          >
-            <Paperclip className="size-[22px]" aria-hidden />
-          </button>
-          <button
-            type="button"
-            onClick={() => imageInput.current?.click()}
-            aria-label="Add picture"
-            className="text-brand -ml-1 flex size-11 shrink-0 items-center justify-center rounded-full transition active:scale-90 active:opacity-60"
-          >
-            <ImagePlus className="size-6" aria-hidden />
-          </button>
+          <div ref={menu} className="relative shrink-0">
+            <button
+              type="button"
+              onClick={() => setMenuOpen((open) => !open)}
+              aria-label="Attach"
+              aria-haspopup="menu"
+              aria-expanded={menuOpen}
+              className={`text-brand flex size-11 items-center justify-center rounded-full transition active:scale-90 ${
+                menuOpen ? "bg-brand/10" : ""
+              }`}
+            >
+              <Paperclip
+                className={`size-[22px] transition-transform duration-200 ${menuOpen ? "-rotate-45" : ""}`}
+                aria-hidden
+              />
+            </button>
+            {menuOpen && (
+              <div
+                role="menu"
+                aria-label="Attach"
+                className="menu-in bg-surface absolute bottom-full left-0 mb-3 w-56 overflow-hidden rounded-2xl shadow-[0_12px_40px_rgb(15_27_42/0.22)]"
+              >
+                {ATTACH_OPTIONS.map(({ id, label, icon: Icon, tile }) => (
+                  <button
+                    key={id}
+                    type="button"
+                    role="menuitem"
+                    onClick={() => choose(id)}
+                    className="group active:bg-brand/5 flex w-full items-center gap-3 pl-3 text-left transition-colors"
+                  >
+                    <span
+                      className={`${tile} flex size-8 shrink-0 items-center justify-center rounded-lg text-white`}
+                    >
+                      <Icon className="size-[18px]" aria-hidden />
+                    </span>
+                    <span className="border-border flex h-12 flex-1 items-center border-b text-[17px] group-last:border-b-0">
+                      {label}
+                    </span>
+                  </button>
+                ))}
+              </div>
+            )}
+          </div>
           <label className="sr-only" htmlFor="message">
             Message
           </label>
