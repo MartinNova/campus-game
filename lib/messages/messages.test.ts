@@ -21,6 +21,7 @@ const msg = (
   recipientId,
   body: `Message ${id}`,
   imageUrl: null,
+  file: null,
   createdAt,
   readAt,
 });
@@ -75,9 +76,11 @@ describe("formatMessageTime", () => {
 
 describe("messagePreview", () => {
   it("shows the text, or Photo for a picture without text", () => {
-    expect(messagePreview({ body: "Hi", imageUrl: "data:x" })).toBe("Hi");
-    expect(messagePreview({ body: " ", imageUrl: "data:x" })).toBe("📷 Photo");
-    expect(messagePreview({ body: "", imageUrl: null })).toBe("");
+    const file = { url: "data:x", name: "Notes.pdf", size: 10, type: "application/pdf" };
+    expect(messagePreview({ body: "Hi", imageUrl: "data:x", file: null })).toBe("Hi");
+    expect(messagePreview({ body: " ", imageUrl: "data:x", file: null })).toBe("📷 Photo");
+    expect(messagePreview({ body: "", imageUrl: null, file })).toBe("📎 Notes.pdf");
+    expect(messagePreview({ body: "", imageUrl: null, file: null })).toBe("");
   });
 });
 
