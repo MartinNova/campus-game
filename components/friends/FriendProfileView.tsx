@@ -1,6 +1,6 @@
 "use client";
 
-import { AtSign, Briefcase, MessageCircle, Trophy } from "lucide-react";
+import { MessageCircle, Trophy } from "lucide-react";
 import Link from "next/link";
 import { useSearchParams } from "next/navigation";
 import { useEffect, useState } from "react";
@@ -78,28 +78,14 @@ export function FriendProfileView() {
           >
             <MessageCircle className="size-5" aria-hidden /> Message
           </Link>
-          <div className="flex flex-wrap gap-2">
-            {p.instagram && (
-              <a
-                href={`https://instagram.com/${p.instagram}`}
-                target="_blank"
-                rel="noreferrer"
-                className={linkClass}
-              >
-                <AtSign className="size-4" aria-hidden /> Instagram
-              </a>
-            )}
-            {p.linkedin && (
-              <a href={p.linkedin} target="_blank" rel="noreferrer" className={linkClass}>
-                <Briefcase className="size-4" aria-hidden /> LinkedIn
-              </a>
-            )}
-            {p.sports.includes("Padel") && (
+          {/* Instagram and LinkedIn are the logos on the profile card above. */}
+          {p.sports.includes("Padel") && (
+            <div className="flex flex-wrap gap-2">
               <Link href="/sport/padel" className={linkClass}>
                 <Trophy className="size-4" aria-hidden /> Find a padel match
               </Link>
-            )}
-          </div>
+            </div>
+          )}
         </Card>
       )}
     </div>
