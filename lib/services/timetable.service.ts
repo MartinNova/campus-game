@@ -1,5 +1,6 @@
 import { readJSON, writeJSON } from "@/lib/storage";
 import { parseIcs } from "@/lib/timetable/ics";
+import { validateEvent, validateLecture } from "@/lib/timetable/validation";
 import type { TimetableData, TimetableService } from "@/types/timetable";
 
 /**
@@ -35,6 +36,8 @@ export const timetableService: TimetableService = {
   },
 
   async addLecture(input) {
+    const problem = validateLecture(input);
+    if (problem) throw new Error(problem);
     const data = load();
     return save({ ...data, lectures: [...data.lectures, { ...input, id: newId() }] });
   },
@@ -71,6 +74,8 @@ export const timetableService: TimetableService = {
   },
 
   async addEvent(input) {
+    const problem = validateEvent(input);
+    if (problem) throw new Error(problem);
     const data = load();
     return save({ ...data, events: [...data.events, { ...input, id: `event:${newId()}` }] });
   },

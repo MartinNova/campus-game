@@ -2,6 +2,7 @@
 
 import { Upload } from "lucide-react";
 import { useRef, useState } from "react";
+import { validateIcsFile } from "@/lib/timetable/validation";
 import type { ImportedCalendar } from "@/types/timetable";
 
 interface CalendarUploadProps {
@@ -16,6 +17,12 @@ export function CalendarUpload({ onImport }: CalendarUploadProps) {
 
   async function handleFile(file: File | undefined) {
     if (!file) return;
+    const problem = validateIcsFile(file);
+    if (problem) {
+      setMessage({ ok: false, text: problem });
+      if (inputRef.current) inputRef.current.value = "";
+      return;
+    }
     try {
       await onImport(file.name.replace(/\.ics$/i, ""), category, await file.text());
       setMessage({ ok: true, text: `Imported "${file.name}".` });

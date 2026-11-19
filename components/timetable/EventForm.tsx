@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { Button } from "@/components/ui/Button";
+import { validateEvent } from "@/lib/timetable/validation";
 import type { EventCategory, NewEvent } from "@/types/timetable";
 
 const INPUT =
@@ -30,26 +31,38 @@ export function EventForm({ defaultDate, defaultStart, defaultEnd, onSubmit }: E
     const f = new FormData(e.currentTarget);
     const start = allDay ? undefined : String(f.get("start")) || undefined;
     const end = allDay ? undefined : String(f.get("end")) || undefined;
-    if (start && end && end <= start) {
-      setError("End time must be after start time.");
-      return;
-    }
-    setError(null);
-    await onSubmit({
+    const event: NewEvent = {
       title: String(f.get("title")).trim(),
       category: f.get("category") as NewEvent["category"],
       date: String(f.get("date")),
       start,
       end,
       location: String(f.get("location")).trim() || undefined,
-    });
+    };
+    const problem = validateEvent(event);
+    if (problem) {
+      setError(problem);
+      return;
+    }
+    setError(null);
+    try {
+      await onSubmit(event);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Could not save the event.");
+    }
   }
 
   return (
     <form onSubmit={handleSubmit} className="space-y-3">
       <label className="block text-sm">
         <span className="mb-1 block font-medium">Title</span>
-        <input name="title" required placeholder="e.g. Group project meeting" className={INPUT} />
+        <input
+          name="title"
+          required
+          maxLength={100}
+          placeholder="e.g. Group project meeting"
+          className={INPUT}
+        />
       </label>
 
       <label className="block text-sm">
@@ -94,7 +107,12 @@ export function EventForm({ defaultDate, defaultStart, defaultEnd, onSubmit }: E
 
       <label className="block text-sm">
         <span className="mb-1 block font-medium">Place (optional)</span>
-        <input name="location" placeholder="e.g. Library, room B-201" className={INPUT} />
+        <input
+          name="location"
+          maxLength={100}
+          placeholder="e.g. Library, room B-201"
+          className={INPUT}
+        />
       </label>
 
       {error && <p className="text-sm text-red-600">{error}</p>}
