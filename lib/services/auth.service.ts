@@ -1,20 +1,9 @@
 import { getSupabase } from "@/lib/supabase/client";
 import { AUTH_MODE } from "@/lib/supabase/config";
+import { friendlyAuthError as friendly } from "@/lib/auth/auth-errors";
 import type { AuthService } from "@/types/user";
 
 const AVATAR_BUCKET = "avatars";
-
-/** Turns Supabase's English error codes into short, friendly messages. */
-function friendly(error: { message: string; code?: string }): Error {
-  const byCode: Record<string, string> = {
-    invalid_credentials: "E-mail or password is wrong.",
-    email_not_confirmed: "Please confirm your e-mail first (check your inbox).",
-    user_already_exists: "There is already an account with this e-mail. Sign in instead.",
-    weak_password: "Please choose a stronger password.",
-    over_email_send_rate_limit: "Too many e-mails sent. Please try again in a few minutes.",
-  };
-  return new Error((error.code && byCode[error.code]) || error.message);
-}
 
 /** Real accounts with Supabase Auth. `null` in demo mode. */
 export const authService: AuthService | null =
