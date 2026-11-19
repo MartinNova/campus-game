@@ -8,7 +8,7 @@ import {
 import { MAX_DEMO_FILE_BYTES, MAX_FILE_BYTES, validateFile } from "@/lib/messages/attachments";
 import { validateMessage } from "@/lib/messages/messages";
 import { readJSON, writeJSON } from "@/lib/storage";
-import { getSupabase } from "@/lib/supabase/client";
+import { getSupabase, liveChannel } from "@/lib/supabase/client";
 import { AUTH_MODE } from "@/lib/supabase/config";
 import {
   MAX_GROUP_MEMBERS,
@@ -427,8 +427,7 @@ const supabaseGroupService: GroupService = {
     if (error) fail(error);
   },
   onChange(userId, listener) {
-    const channel = getSupabase()
-      .channel(`groups:${userId}`)
+    const channel = liveChannel(`groups:${userId}`)
       .on("postgres_changes", { event: "*", schema: "public", table: "group_messages" }, listener)
       .on("postgres_changes", { event: "*", schema: "public", table: "chat_groups" }, listener)
       .on(

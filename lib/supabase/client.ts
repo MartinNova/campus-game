@@ -13,3 +13,13 @@ export function getSupabase(): SupabaseClient {
   client ??= createBrowserClient(SUPABASE_URL, SUPABASE_ANON_KEY);
   return client;
 }
+
+/**
+ * A new live-updates channel. Supabase hands back the *same* channel for the same name,
+ * and adding listeners to one that is already subscribed throws, which crashes the page.
+ * Several components often listen at once (e.g. the tab bar badge and the Messages card),
+ * so every subscription gets its own channel.
+ */
+export function liveChannel(name: string) {
+  return getSupabase().channel(`${name}:${crypto.randomUUID()}`);
+}
