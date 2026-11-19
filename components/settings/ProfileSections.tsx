@@ -129,6 +129,22 @@ export function AboutSection({ form, set, userId }: SectionProps & { userId: str
       </div>
 
       <label className="text-sm font-medium">
+        Student ID
+        <input
+          inputMode="numeric"
+          autoComplete="off"
+          value={form.studentId}
+          onChange={(e) => set("studentId", e.target.value.replace(/\D/g, ""))}
+          maxLength={10}
+          placeholder="e.g. 79109"
+          className={fieldClass}
+        />
+        <span className="text-muted mt-1 block text-xs font-normal">
+          Your Nova student number. Only you can see it.
+        </span>
+      </label>
+
+      <label className="text-sm font-medium">
         About you
         <textarea
           value={form.bio}

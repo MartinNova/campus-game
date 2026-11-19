@@ -72,7 +72,10 @@ export interface Profile {
   userId: string;
   /** Read-only: comes from the login. Empty for demo accounts. */
   email: string;
-  /** Read-only: taken from a Nova e-mail (79109@novasbe.pt -> 79109). */
+  /**
+   * Nova student number, e.g. "79109". Filled in from a Nova e-mail (79109@novasbe.pt),
+   * editable in Settings. Private: only you can see it.
+   */
   studentId: string;
 
   username: string;
@@ -108,7 +111,7 @@ export interface Profile {
 }
 
 /** Everything a student may change themselves. */
-export type ProfileUpdate = Omit<Profile, "userId" | "email" | "studentId">;
+export type ProfileUpdate = Omit<Profile, "userId" | "email">;
 
 export const BIO_MAX_LENGTH = 300;
 

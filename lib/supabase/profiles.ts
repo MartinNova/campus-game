@@ -4,7 +4,8 @@ import type { User } from "@/types/user";
 /** One row of the `profiles` table (see supabase/migrations). */
 export interface ProfileRow {
   id: string;
-  student_id: string;
+  /** Not selected anymore: only readable for yourself via my_student_id() (see migrations). */
+  student_id?: string;
   username: string | null;
   first_name: string;
   last_name: string;
@@ -26,21 +27,21 @@ export interface ProfileRow {
   show_in_suggestions: boolean;
 }
 
-/** Everything except e-mail: other students can't read it (see migrations). */
+/** Everything except e-mail and student number: other students can't read those (see migrations). */
 export const PROFILE_COLUMNS =
-  "id, student_id, username, first_name, last_name, avatar_url, bio, country, languages, " +
+  "id, username, first_name, last_name, avatar_url, bio, country, languages, " +
   "instagram, linkedin, program, study_start, study_end, study_status, sports, padel_level, " +
   "availability_days, availability_times, visibility, show_in_suggestions";
 
 /** Enough for names and avatars in lists (padel players, running clubs, ...). */
-export const USER_COLUMNS = "id, student_id, username, first_name, last_name, avatar_url";
+export const USER_COLUMNS = "id, username, first_name, last_name, avatar_url";
 
-/** `email` is only known for your own profile (from the login). */
-export function rowToProfile(row: ProfileRow, email = ""): Profile {
+/** `email` and `studentId` are only known for your own profile. */
+export function rowToProfile(row: ProfileRow, email = "", studentId = ""): Profile {
   return {
     userId: row.id,
     email,
-    studentId: row.student_id,
+    studentId,
     username: row.username ?? "",
     firstName: row.first_name,
     lastName: row.last_name,
@@ -76,7 +77,7 @@ export function rowToUser(
     // Accounts without a name yet are shown with their username.
     firstName: row.first_name || row.username || "Student",
     lastName: row.last_name,
-    studentId: row.student_id,
+    studentId: row.student_id ?? "",
     role: "student",
     email,
     username: row.username ?? undefined,
