@@ -24,13 +24,13 @@ export function Sheet({ title, subtitle, onClose, children }: SheetProps) {
         type="button"
         aria-label="Close"
         onClick={onClose}
-        className="absolute inset-0 bg-black/40"
+        className="fade-in absolute inset-0 bg-black/40"
       />
       <div
         role="dialog"
         aria-modal="true"
         aria-labelledby="sheet-title"
-        className="bg-surface relative max-h-[90vh] w-full max-w-md overflow-y-auto rounded-t-3xl p-5 pb-[calc(1.25rem+env(safe-area-inset-bottom))] shadow-xl sm:rounded-3xl"
+        className="sheet-in bg-surface relative max-h-[90vh] w-full max-w-md overflow-y-auto rounded-t-3xl p-5 pb-[calc(1.25rem+env(safe-area-inset-bottom))] shadow-xl sm:rounded-3xl"
       >
         <div className="mb-4 flex items-start justify-between gap-3">
           <div className="min-w-0">

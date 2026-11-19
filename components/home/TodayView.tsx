@@ -1,58 +1,15 @@
 "use client";
 
 import { GraduationCap, ListChecks, Trophy, UtensilsCrossed } from "lucide-react";
-import { useEffect, useState } from "react";
 import { GroupedList, ListRow } from "@/components/ui/GroupedList";
 import { FOOD_VENUES } from "@/data/food-options";
-import { dueTodos, nextLecture, nowInLisbon, openMatches, startsIn } from "@/lib/home/today";
-import { padelService } from "@/lib/services/padel.service";
-import { timetableService } from "@/lib/services/timetable.service";
-import { todoService } from "@/lib/services/todo.service";
-import { eventsBetween } from "@/lib/timetable/schedule";
-import { todayInLisbon } from "@/lib/timetable/dates";
-import type { PadelMatch } from "@/types/padel";
-import type { TimetableEvent } from "@/types/timetable";
-import type { Todo } from "@/types/todo";
-
-interface Today {
-  time: string;
-  lecture: TimetableEvent | null;
-  matches: PadelMatch[];
-  todos: Todo[];
-}
+import { startsIn } from "@/lib/home/today";
+import type { Today } from "./useToday";
 
 const ICON = "size-[19px]";
 
 /** "Up next" and "Today on campus": one glance at the day, built from the other modules. */
-export function TodayView() {
-  const [today, setToday] = useState<Today | null>(null);
-
-  useEffect(() => {
-    let cancelled = false;
-    const date = todayInLisbon();
-    const time = nowInLisbon();
-    // Each module may fail on its own (e.g. Supabase offline); the rest still shows.
-    Promise.all([
-      timetableService
-        .load()
-        .then((data) => nextLecture(eventsBetween(data, date, date), time))
-        .catch(() => null),
-      padelService
-        .listMatches({ date })
-        .then((m) => openMatches(m, time))
-        .catch(() => []),
-      todoService
-        .listTodos()
-        .then((t) => dueTodos(t, date))
-        .catch(() => []),
-    ]).then(([lecture, matches, todos]) => {
-      if (!cancelled) setToday({ time, lecture, matches, todos });
-    });
-    return () => {
-      cancelled = true;
-    };
-  }, []);
-
+export function TodayView({ today }: { today: Today | null }) {
   if (!today) {
     return (
       <div aria-busy className="flex flex-col gap-6">
