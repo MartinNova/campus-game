@@ -22,8 +22,7 @@ export default function GymPage() {
         subtitle="Viva Gym on campus: opening hours and how busy it is."
         backHref="/sport"
       />
-
-      <div className="bg-brand text-brand-foreground relative mb-4 aspect-[4/3] overflow-hidden rounded-2xl sm:aspect-[16/9]">
+      <div className="bg-brand text-brand-foreground relative mb-4 aspect-[2/1] overflow-hidden rounded-2xl sm:aspect-[3/1]">
         {HAS_PHOTO ? (
           <Image
             src={PHOTO}
