@@ -1,4 +1,4 @@
-import { CalendarClock, GraduationCap, Languages, Link2 } from "lucide-react";
+import { CalendarClock, GraduationCap, IdCard, Languages, Link2 } from "lucide-react";
 import { Avatar } from "@/components/ui/Avatar";
 import { Badge } from "@/components/ui/Badge";
 import { Card } from "@/components/ui/Card";
@@ -53,6 +53,16 @@ export function ProfileCard({ profile: p, today }: ProfileCardProps) {
                 .join(" · ")}
             </p>
           </div>
+        </div>
+      )}
+
+      {p.studentId && (
+        <div className="flex items-center gap-3">
+          <IdCard className="text-brand size-5 shrink-0" aria-hidden />
+          <p className="text-sm">
+            <span className="text-muted">Student ID</span>{" "}
+            <span className="font-medium tabular-nums">{p.studentId}</span>
+          </p>
         </div>
       )}
 
