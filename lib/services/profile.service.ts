@@ -71,13 +71,6 @@ const demoProfileService: ProfileService = {
   },
 };
 
-/** Your own student number; other students' numbers are not readable (see migrations). */
-async function myStudentId(): Promise<string> {
-  const { data, error } = await getSupabase().rpc("my_student_id");
-  // Before the student ID migration runs the function doesn't exist yet: show it as empty.
-  return error ? "" : ((data as string | null) ?? "");
-}
-
 /** Your own e-mail comes from the login; other students' e-mails are not readable. */
 async function emailIfMine(userId: string): Promise<string> {
   const {
@@ -95,10 +88,7 @@ const supabaseProfileService: ProfileService = {
       .eq("id", userId)
       .maybeSingle();
     if (error) throw error;
-    if (!data) return null;
-    const email = await emailIfMine(userId);
-    // Only for yourself (the e-mail is only known for your own profile).
-    return rowToProfile(data as unknown as ProfileRow, email, email ? await myStudentId() : "");
+    return data ? rowToProfile(data as unknown as ProfileRow, await emailIfMine(userId)) : null;
   },
   async getProfileByUsername(username) {
     const { data, error } = await getSupabase()
@@ -130,14 +120,16 @@ const supabaseProfileService: ProfileService = {
     // 23505 = unique violation, i.e. the username is taken.
     if (dbError?.code === "23505") throw new Error("This username is already taken.");
     if (dbError) throw dbError;
+    // The student number is changed through a checked function (digits only, your own row).
+    const row = data as unknown as ProfileRow;
     const studentId = update.studentId.trim();
-    if (studentId !== (await myStudentId())) {
+    if (studentId !== (row.student_id ?? "")) {
       const { error: idError } = await getSupabase().rpc("set_my_student_id", {
         new_student_id: studentId,
       });
       if (idError) throw new Error("Could not save your student ID. Please try again.");
     }
-    return rowToProfile(data as unknown as ProfileRow, await emailIfMine(userId), studentId);
+    return rowToProfile({ ...row, student_id: studentId }, await emailIfMine(userId));
   },
   async uploadAvatar(userId, image) {
     // New file name each time, so browsers don't show the old cached picture.

@@ -74,7 +74,7 @@ export interface Profile {
   email: string;
   /**
    * Nova student number, e.g. "79109". Filled in from a Nova e-mail (79109@novasbe.pt),
-   * editable in Settings. Private: only you can see it.
+   * editable in Settings. Shown on your profile to other students.
    */
   studentId: string;
 

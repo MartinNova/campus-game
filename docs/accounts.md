@@ -26,7 +26,8 @@ The header shows **Sign in** when signed out, otherwise the settings gear and yo
    7. `20261119000000_message_images.sql` (pictures in chats, private `message-images` bucket)
    8. `20261119010000_message_files.sql` (files in chats, private `message-files` bucket)
    9. `20261119020000_group_chats.sql` (group chats with admins, private `group-photos` bucket)
-   10. `20261119030000_student_id.sql` (student ID editable in Settings and private; run after deploying that app version)
+   10. `20261119030000_student_id.sql` (student ID editable in Settings)
+   11. `20261119040000_student_id_visible.sql` (student ID shown on profiles to other students)
 3. **Authentication → Sign In / Providers → Email**: enabled (default).
    - For a live demo, turn **Confirm email** off: Supabase's built-in mail server only
      sends a few e-mails per hour. With it on, new users must click a link first.
