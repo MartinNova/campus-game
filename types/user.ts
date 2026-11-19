@@ -46,6 +46,8 @@ export interface AuthService {
   /** Supabase sends a confirmation link to the new address. */
   changeEmail(email: string): Promise<void>;
   changePassword(password: string): Promise<void>;
+  /** Sends a link to set a new password. Says nothing about whether the account exists. */
+  requestPasswordReset(email: string): Promise<void>;
   /** Deletes the login, profile and profile picture for good. */
   deleteAccount(): Promise<void>;
   /** Calls `listener` whenever the user signs in or out. Returns an unsubscribe function. */

@@ -1,3 +1,4 @@
+import { RESET_PASSWORD_PATH } from "@/lib/auth/password-reset";
 import { getSupabase } from "@/lib/supabase/client";
 import { AUTH_MODE } from "@/lib/supabase/config";
 import { friendlyAuthError as friendly } from "@/lib/auth/auth-errors";
@@ -59,6 +60,12 @@ export const authService: AuthService | null =
         },
         async changePassword(password) {
           const { error } = await getSupabase().auth.updateUser({ password });
+          if (error) throw friendly(error);
+        },
+        async requestPasswordReset(email) {
+          const { error } = await getSupabase().auth.resetPasswordForEmail(email.trim(), {
+            redirectTo: `${window.location.origin}/auth/callback?next=${RESET_PASSWORD_PATH}`,
+          });
           if (error) throw friendly(error);
         },
         async deleteAccount() {
