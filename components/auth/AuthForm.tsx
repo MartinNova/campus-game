@@ -46,6 +46,8 @@ export function AuthForm() {
   );
   const [busy, setBusy] = useState(false);
   const [checkInbox, setCheckInbox] = useState(false);
+  // "Forgot password?": null = normal form, "form" = ask for the e-mail, "sent" = link sent.
+  const [reset, setReset] = useState<null | "form" | "sent">(null);
 
   // Already signed in: go straight to your area.
   useEffect(() => {
@@ -74,6 +76,80 @@ export function AuthForm() {
           We sent a link to <strong>{email}</strong>. Open it to confirm your account, then you are
           signed in.
         </p>
+      </Card>
+    );
+  }
+
+  if (reset === "sent") {
+    return (
+      <Card className="flex flex-col items-center gap-2 py-8 text-center">
+        <MailCheck className="text-brand size-8" aria-hidden />
+        <p className="font-semibold">Check your inbox</p>
+        <p className="text-muted max-w-xs text-sm">
+          If there is an account for <strong>{email}</strong>, we sent a link to set a new password.
+          It can take a minute; check your spam folder too.
+        </p>
+        <Button variant="ghost" onClick={() => setReset(null)}>
+          Back to sign in
+        </Button>
+      </Card>
+    );
+  }
+
+  if (reset === "form") {
+    return (
+      <Card>
+        <form
+          className="grid gap-4"
+          onSubmit={async (e) => {
+            e.preventDefault();
+            setError(null);
+            setBusy(true);
+            try {
+              await auth.requestPasswordReset(email);
+              setReset("sent");
+            } catch (err) {
+              setError(err instanceof Error ? err.message : "Something went wrong.");
+            } finally {
+              setBusy(false);
+            }
+          }}
+        >
+          <div>
+            <p className="font-semibold">Forgot your password?</p>
+            <p className="text-muted text-sm">
+              Enter your e-mail and we&apos;ll send you a link to set a new one.
+            </p>
+          </div>
+          <label className="text-sm font-medium">
+            E-mail
+            <input
+              type="email"
+              required
+              autoComplete="email"
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+              className={fieldClass}
+            />
+          </label>
+          {error && (
+            <p role="alert" className="text-sm text-red-700 dark:text-red-400">
+              {error}
+            </p>
+          )}
+          <Button type="submit" disabled={busy} className="h-11">
+            Send reset link
+          </Button>
+          <Button
+            variant="ghost"
+            onClick={() => {
+              setError(null);
+              setReset(null);
+            }}
+          >
+            Back to sign in
+          </Button>
+        </form>
       </Card>
     );
   }
@@ -203,6 +279,18 @@ export function AuthForm() {
             </span>
           )}
         </label>
+        {tab === "signin" && (
+          <button
+            type="button"
+            onClick={() => {
+              setError(null);
+              setReset("form");
+            }}
+            className="text-brand -mt-2 justify-self-start text-sm underline-offset-4 hover:underline"
+          >
+            Forgot password?
+          </button>
+        )}
 
         {error && (
           <p role="alert" className="text-sm text-red-700 dark:text-red-400">
