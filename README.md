@@ -30,21 +30,26 @@ How it is built and why: **[docs/ARCHITECTURE.md](docs/ARCHITECTURE.md)**.
 
 ## Setup
 
-Requires Node.js 20.9 or newer.
+Requires Node.js 20.9 or newer (CI uses Node 24, see `.nvmrc`).
 
 ```bash
-npm install
+npm ci             # installs exactly the versions in package-lock.json
 cp .env.example .env.local
 npm run dev        # http://localhost:3000
 ```
 
-| Script              | Purpose                        |
-| ------------------- | ------------------------------ |
-| `npm run dev`       | Start the dev server           |
-| `npm run lint`      | ESLint                         |
-| `npm run typecheck` | TypeScript check               |
-| `npm run format`    | Format all files with Prettier |
-| `npm run build`     | Production build               |
+Dependencies are pinned to exact versions (`.npmrc` has `save-exact=true`), and CI fails on any
+known vulnerability (`npm audit`). GitHub Actions are pinned to commit SHAs.
+
+| Script              | Purpose                                      |
+| ------------------- | -------------------------------------------- |
+| `npm run dev`       | Start the dev server                         |
+| `npm run lint`      | ESLint                                       |
+| `npm run typecheck` | TypeScript check                             |
+| `npm run format`    | Format all files with Prettier               |
+| `npm test`          | Unit tests (Vitest)                          |
+| `npm run build`     | Production build                             |
+| `npm audit`         | Check dependencies for known vulnerabilities |
 
 ### Demo accounts
 
