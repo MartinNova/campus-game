@@ -48,6 +48,24 @@ There is no real login yet. Switch accounts in the header. The repo ships four *
 accounts and six fictional **demo students**. To show your real names and student IDs locally
 (e.g. in the presentation), set `NEXT_PUBLIC_TEAM_MEMBERS` in `.env.local`. It is never committed.
 
+## Tests
+
+`npm test` runs 200+ unit tests (Vitest) on every pull request and on `main` (see CI). They cover
+the accepted path, the **rejected** actions and the **edge cases** of each workflow:
+
+| Area                         | Accepted                                                 | Rejected / edge cases                                                                                                                                            | Files                                                 |
+| ---------------------------- | -------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------- | ----------------------------------------------------- |
+| Accounts                     | valid usernames, profiles, links                         | too short/long usernames, 7-char passwords, bio over 300, fake LinkedIn URLs, wrong password message                                                             | `lib/profile/`, `lib/auth/`, `lib/validation/`        |
+| Padel                        | post, ask to join, accept, leave                         | past dates, full courts, double requests, declined players asking again, non-organisers answering or cancelling                                                  | `lib/padel/`, `lib/services/rejected-actions.test.ts` |
+| Rooms                        | post, filter, delete own                                 | someone else deleting your listing, rent 0 / 5001 / not a number, title 81 chars, end before start                                                               | `lib/rooms/`, `lib/services/`, `lib/validation/`      |
+| Messages                     | send, group chats, unread, mark read                     | empty or 1001-char messages, others reading your chat, marking your own messages as read                                                                         | `lib/messages/`, `lib/services/`                      |
+| Trains, deadlines, timetable | next trains, train after class, `.ics` export and import | after midnight, no data for a day, DST, holidays                                                                                                                 | `lib/transport/`, `lib/deadlines/`, `lib/timetable/`  |
+| Security                     | –                                                        | every table has Row Level Security, no table granted to signed-out visitors, security-definer functions pin `search_path`, no secret keys or `.env.local` in git | `lib/security/security.test.ts`                       |
+
+The services are tested in demo mode (an in-memory `localStorage`), so tests need no network.
+The same rules are enforced a second time by the database (check constraints and RLS policies in
+`supabase/migrations/`), so a modified client can't skip them.
+
 ## Folder structure
 
 ```
