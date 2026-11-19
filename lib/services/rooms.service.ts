@@ -2,7 +2,7 @@ import { createMockListings } from "@/data/rooms.mock";
 import { toISODate } from "@/lib/padel/dates";
 import { validateNewListing } from "@/lib/rooms/rooms";
 import { readJSON, writeJSON } from "@/lib/storage";
-import { getSupabase } from "@/lib/supabase/client";
+import { getSupabase, liveChannel } from "@/lib/supabase/client";
 import { AUTH_MODE } from "@/lib/supabase/config";
 import { MAX_ROOM_PHOTOS, type RoomListing, type RoomService, type RoomType } from "@/types/rooms";
 import { hasSession } from "./user.service";
@@ -171,8 +171,7 @@ const supabaseRoomService: RoomService = {
     if (files?.length) await bucket.remove(files.map((f) => `${userId}/${id}/${f.name}`));
   },
   onChange(listener) {
-    const channel = getSupabase()
-      .channel("rooms")
+    const channel = liveChannel("rooms")
       .on("postgres_changes", { event: "*", schema: "public", table: "room_listings" }, listener)
       .subscribe();
     return () => void getSupabase().removeChannel(channel);

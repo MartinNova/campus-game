@@ -1,7 +1,7 @@
 import { MAX_DEMO_FILE_BYTES, MAX_FILE_BYTES, validateFile } from "@/lib/messages/attachments";
 import { validateMessage } from "@/lib/messages/messages";
 import { readJSON, writeJSON } from "@/lib/storage";
-import { getSupabase } from "@/lib/supabase/client";
+import { getSupabase, liveChannel } from "@/lib/supabase/client";
 import { AUTH_MODE } from "@/lib/supabase/config";
 import type { Message, MessageService } from "@/types/messages";
 import {
@@ -192,8 +192,7 @@ const supabaseMessageService: MessageService = {
     if (error) fail(error);
   },
   onChange(userId, listener) {
-    const channel = getSupabase()
-      .channel(`messages:${userId}`)
+    const channel = liveChannel(`messages:${userId}`)
       .on("postgres_changes", { event: "*", schema: "public", table: "messages" }, listener)
       .subscribe();
     return () => void getSupabase().removeChannel(channel);

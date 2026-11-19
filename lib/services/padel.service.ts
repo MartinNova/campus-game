@@ -11,7 +11,7 @@ import {
   withdrawRequest,
 } from "@/lib/padel/matches";
 import { readJSON, writeJSON } from "@/lib/storage";
-import { getSupabase } from "@/lib/supabase/client";
+import { getSupabase, liveChannel } from "@/lib/supabase/client";
 import { AUTH_MODE } from "@/lib/supabase/config";
 import type { JoinRequest, PadelMatch, PadelService } from "@/types/padel";
 import { hasSession } from "./user.service";
@@ -275,8 +275,7 @@ const supabasePadelService: PadelService = {
     if (error) fail(error);
   },
   onChange(listener) {
-    const channel = getSupabase()
-      .channel("padel")
+    const channel = liveChannel("padel")
       .on("postgres_changes", { event: "*", schema: "public", table: "padel_matches" }, listener)
       .on(
         "postgres_changes",
