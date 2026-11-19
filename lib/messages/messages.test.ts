@@ -1,6 +1,13 @@
 import { describe, expect, it } from "vitest";
 import type { Message } from "@/types/messages";
-import { formatMessageTime, groupConversations, unreadCount, validateMessage } from "./messages";
+import {
+  badgeLabel,
+  formatMessageTime,
+  groupConversations,
+  messagePreview,
+  unreadCount,
+  validateMessage,
+} from "./messages";
 
 const msg = (
   id: string,
@@ -8,13 +15,26 @@ const msg = (
   recipientId: string,
   createdAt: string,
   readAt: string | null = null,
-): Message => ({ id, senderId, recipientId, body: `Message ${id}`, createdAt, readAt });
+): Message => ({
+  id,
+  senderId,
+  recipientId,
+  body: `Message ${id}`,
+  imageUrl: null,
+  createdAt,
+  readAt,
+});
 
 describe("validateMessage", () => {
   it("rejects empty and too long messages", () => {
     expect(validateMessage("  ")).toMatch(/Write/);
     expect(validateMessage("x".repeat(1001))).toMatch(/1000/);
     expect(validateMessage(" Hi! ")).toBeNull();
+  });
+
+  it("allows a picture without text", () => {
+    expect(validateMessage("", true)).toBeNull();
+    expect(validateMessage("x".repeat(1001), true)).toMatch(/1000/);
   });
 });
 
@@ -50,5 +70,21 @@ describe("formatMessageTime", () => {
     expect(formatMessageTime(new Date(2026, 10, 17, 22, 0).toISOString(), now)).toBe("Yesterday");
     expect(formatMessageTime(new Date(2026, 10, 14, 12, 0).toISOString(), now)).toBe("Sat");
     expect(formatMessageTime(new Date(2026, 10, 2, 12, 0).toISOString(), now)).toBe("2 Nov");
+  });
+});
+
+describe("messagePreview", () => {
+  it("shows the text, or Photo for a picture without text", () => {
+    expect(messagePreview({ body: "Hi", imageUrl: "data:x" })).toBe("Hi");
+    expect(messagePreview({ body: " ", imageUrl: "data:x" })).toBe("📷 Photo");
+    expect(messagePreview({ body: "", imageUrl: null })).toBe("");
+  });
+});
+
+describe("badgeLabel", () => {
+  it("caps at 99+", () => {
+    expect(badgeLabel(3)).toBe("3");
+    expect(badgeLabel(99)).toBe("99");
+    expect(badgeLabel(120)).toBe("99+");
   });
 });

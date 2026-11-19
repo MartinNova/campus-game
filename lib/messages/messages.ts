@@ -1,9 +1,9 @@
 import { MAX_MESSAGE_LENGTH, type Conversation, type Message } from "@/types/messages";
 
-/** Returns an error message, or null if the text can be sent. */
-export function validateMessage(body: string): string | null {
+/** Returns an error message, or null if the message can be sent. A picture needs no text. */
+export function validateMessage(body: string, hasImage = false): string | null {
   const text = body.trim();
-  if (!text) return "Write a message first.";
+  if (!text && !hasImage) return "Write a message first.";
   if (text.length > MAX_MESSAGE_LENGTH)
     return `Messages can have at most ${MAX_MESSAGE_LENGTH} characters.`;
   return null;
@@ -29,6 +29,17 @@ export function groupConversations(messages: Message[], userId: string): Convers
 /** Total unread messages across all chats. */
 export function unreadCount(messages: Message[], userId: string): number {
   return messages.filter((m) => m.recipientId === userId && !m.readAt).length;
+}
+
+/** Inbox preview for a message: its text, or "Photo" for a picture without text. */
+export function messagePreview(message: Pick<Message, "body" | "imageUrl">): string {
+  if (message.body.trim()) return message.body;
+  return message.imageUrl ? "📷 Photo" : "";
+}
+
+/** Badge text: "1" … "99", then "99+". */
+export function badgeLabel(count: number): string {
+  return count > 99 ? "99+" : String(count);
 }
 
 /** "14:05" today, "Yesterday", "Mon" this week, otherwise "12 Nov". */

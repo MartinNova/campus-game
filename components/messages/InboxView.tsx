@@ -5,7 +5,12 @@ import Link from "next/link";
 import { useCurrentUser } from "@/components/providers/CurrentUserProvider";
 import { Avatar } from "@/components/ui/Avatar";
 import { Card } from "@/components/ui/Card";
-import { formatMessageTime, groupConversations } from "@/lib/messages/messages";
+import {
+  badgeLabel,
+  formatMessageTime,
+  groupConversations,
+  messagePreview,
+} from "@/lib/messages/messages";
 import { useMyMessages } from "./useMyMessages";
 
 /** All your chats, most recent first. */
@@ -31,7 +36,9 @@ export function InboxView() {
   if (chats.length === 0) {
     return (
       <Card className="flex flex-col items-center gap-3 py-10 text-center">
-        <MessageCircle className="text-brand size-8" aria-hidden />
+        <span className="bg-brand text-brand-foreground flex size-14 items-center justify-center rounded-2xl">
+          <MessageCircle className="size-7" aria-hidden />
+        </span>
         <p className="font-semibold">No messages yet</p>
         <p className="text-muted max-w-xs text-sm">
           Find someone in Friends and say hi, or message the person behind a room or padel match.
@@ -82,11 +89,12 @@ export function InboxView() {
                     className={`truncate text-sm ${unread ? "text-foreground font-medium" : "text-muted"}`}
                   >
                     {last.senderId === user.id ? "You: " : ""}
-                    {last.body}
+                    {messagePreview(last)}
                   </span>
                   {unread > 0 && (
-                    <span className="bg-brand text-brand-foreground min-w-5 shrink-0 rounded-full px-1.5 text-center text-xs font-semibold">
-                      {unread}
+                    <span className="flex h-5 min-w-5 shrink-0 items-center justify-center rounded-full bg-[#d70015] px-1.5 text-[12px] font-semibold text-white tabular-nums">
+                      {badgeLabel(unread)}
+                      <span className="sr-only"> unread</span>
                     </span>
                   )}
                 </span>
