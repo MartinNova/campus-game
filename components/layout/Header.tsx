@@ -55,8 +55,9 @@ export function Header() {
 
         <p
           aria-hidden={!collapsed}
-          className={`max-w-[45vw] truncate text-[17px] font-semibold transition-opacity duration-200 ${
-            collapsed ? "opacity-100" : "opacity-0"
+          // Takes no width until it shows, so the back label isn't cut short for long titles.
+          className={`truncate text-[17px] font-semibold transition-opacity duration-200 ${
+            collapsed ? "max-w-[45vw] opacity-100" : "max-w-0 opacity-0"
           }`}
         >
           {pageTitle?.title}

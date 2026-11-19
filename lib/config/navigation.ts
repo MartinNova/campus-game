@@ -140,8 +140,9 @@ export function isActive(pathname: string, href: string, alsoActiveFor: string[]
 
 /** Name of a page for "‹ Back" buttons, e.g. "/sport" -> "Sport". Falls back to "Back". */
 export function labelForHref(href: string): string {
+  const path = href.split("?")[0]; // "/friends/group?id=…" → "/friends/group"
   const all = [...MAIN_NAV, ...STUDY_MODULES, ...SPORT_MODULES];
-  return all.find((item) => item.href === href)?.label ?? BACK_LABELS[href] ?? "Back";
+  return all.find((item) => item.href === path)?.label ?? BACK_LABELS[path] ?? "Back";
 }
 
 /** Pages that are not in a nav list but are a "back" target. */
@@ -150,4 +151,5 @@ const BACK_LABELS: Record<string, string> = {
   "/campus/rooms": "Rooms & flats",
   "/profile": "Your area",
   "/friends/messages": "Messages",
+  "/friends/group": "Chat",
 };
