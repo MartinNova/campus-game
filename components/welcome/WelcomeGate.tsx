@@ -7,7 +7,7 @@ import { isGuest, setGuest, subscribeToGuest } from "@/lib/welcome/guest";
 import { WelcomeScreen } from "./WelcomeScreen";
 
 /** Sign-in pages stay reachable, otherwise nobody could get past the welcome screen. */
-const OPEN_ROUTES = ["/login", "/auth"];
+const OPEN_ROUTES = ["/login", "/auth", "/reset-password"];
 
 /**
  * Shows the welcome screen instead of the app to signed-out visitors (real accounts only),
