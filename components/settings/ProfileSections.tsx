@@ -136,11 +136,11 @@ export function AboutSection({ form, set, userId }: SectionProps & { userId: str
           value={form.studentId}
           onChange={(e) => set("studentId", e.target.value.replace(/\D/g, ""))}
           maxLength={10}
-          placeholder="e.g. 79109"
+          placeholder="e.g. 12345"
           className={fieldClass}
         />
         <span className="text-muted mt-1 block text-xs font-normal">
-          Your Nova student number. Other students see it on your profile.
+          Your Nova student number. Only you can see it.
         </span>
       </label>
 
