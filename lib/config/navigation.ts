@@ -33,11 +33,11 @@ export interface SubModule extends NavItem {
 }
 
 /**
- * Bottom navigation. Single source of truth: add a new module here
- * and it appears in the nav and on the home page.
+ * Bottom navigation, left to right. Single source of truth: add a new module here
+ * and it appears in the nav and on the home page. Home sits in the middle (see BottomNav),
+ * and the app still opens on Home ("/", also the manifest's start_url).
  */
 export const MAIN_NAV: NavItem[] = [
-  { href: "/", label: "Home", icon: Home, status: "live" },
   { href: "/sport", label: "Sport", icon: Trophy, status: "live" },
   // Study Hub bundles the timetable and the to-do lists (/timetable stays its own page).
   {
@@ -47,6 +47,7 @@ export const MAIN_NAV: NavItem[] = [
     status: "live",
     alsoActiveFor: ["/timetable"],
   },
+  { href: "/", label: "Home", icon: Home, status: "live" },
   { href: "/friends", label: "Friends", icon: Users, status: "live" },
   // Campus bundles library, study rooms, map and Food Options (/canteen stays its own page).
   {
