@@ -12,6 +12,8 @@ const HIDDEN_ON = ["/friends/chat", "/friends/group"];
 /**
  * Floating glass tab bar (modern iOS). Content scrolls underneath; a soft fade
  * keeps text from running straight into the bar. Items come from lib/config/navigation.ts.
+ * Home is the centre tab: a slightly larger navy circle, still inside the bar
+ * (no floating button sticking out), so the bar keeps one height and one tap row.
  */
 export function BottomNav() {
   const pathname = usePathname();
@@ -31,6 +33,24 @@ export function BottomNav() {
         <ul className="glass flex h-16 rounded-full p-1 shadow-[0_10px_30px_rgb(15_27_42/0.14)]">
           {MAIN_NAV.map(({ href, label, icon: Icon, alsoActiveFor }) => {
             const active = isActive(pathname, href, alsoActiveFor);
+            if (href === "/") {
+              return (
+                <li key={href} className="flex flex-1 items-center justify-center">
+                  <Link
+                    href={href}
+                    aria-label={label}
+                    aria-current={active ? "page" : undefined}
+                    className={`focus-visible:outline-brand flex size-[52px] items-center justify-center rounded-full transition focus-visible:outline-2 focus-visible:outline-offset-2 active:scale-90 ${
+                      active
+                        ? "bg-brand text-brand-foreground shadow-[0_6px_16px_rgb(11_42_74/0.35)]"
+                        : "bg-brand/10 text-brand hover:bg-brand/15"
+                    }`}
+                  >
+                    <Icon className="size-7" strokeWidth={active ? 2.3 : 2} aria-hidden />
+                  </Link>
+                </li>
+              );
+            }
             return (
               <li key={href} className="flex-1">
                 <Link
