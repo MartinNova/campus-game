@@ -9,6 +9,7 @@ import {
   MAX_FILE_BYTES,
   validateFile,
 } from "@/lib/messages/attachments";
+import { TYPING_IDLE_MS } from "@/lib/presence/presence";
 import { resizePhoto } from "@/lib/rooms/photos";
 import { AUTH_MODE } from "@/lib/supabase/config";
 import { MAX_MESSAGE_LENGTH, type Attachment } from "@/types/messages";
@@ -24,6 +25,8 @@ interface ComposerProps {
   placeholder: string;
   /** Throws to show an error; the draft is kept then. */
   onSend: (body: string, attachment?: Attachment) => Promise<void>;
+  /** Called with true while you type and false once you stop or send ("typing…" for others). */
+  onTyping?: (typing: boolean) => void;
 }
 
 /** The attach menu, like WhatsApp: photo library, camera, or a document. */
@@ -37,7 +40,7 @@ const ATTACH_OPTIONS = [
  * Message field with one paperclip (photos, camera, document), fixed to the bottom of the screen
  * (pages using it hide the tab bar, like WhatsApp and iMessage do in a chat).
  */
-export function Composer({ placeholder, onSend }: ComposerProps) {
+export function Composer({ placeholder, onSend, onTyping }: ComposerProps) {
   const [draft, setDraft] = useState("");
   const [pending, setPending] = useState<Pending | null>(null);
   const [sending, setSending] = useState(false);
@@ -47,6 +50,27 @@ export function Composer({ placeholder, onSend }: ComposerProps) {
   const cameraInput = useRef<HTMLInputElement>(null);
   const fileInput = useRef<HTMLInputElement>(null);
   const menu = useRef<HTMLDivElement>(null);
+  const typingTimer = useRef<ReturnType<typeof setTimeout>>(undefined);
+  const onTypingRef = useRef(onTyping);
+  useEffect(() => {
+    onTypingRef.current = onTyping;
+  });
+
+  function stopTyping() {
+    clearTimeout(typingTimer.current);
+    onTypingRef.current?.(false);
+  }
+
+  function changeDraft(value: string) {
+    setDraft(value);
+    if (!value.trim()) return stopTyping();
+    onTypingRef.current?.(true);
+    clearTimeout(typingTimer.current);
+    typingTimer.current = setTimeout(stopTyping, TYPING_IDLE_MS);
+  }
+
+  // Leaving the chat stops "typing…".
+  useEffect(() => stopTyping, []);
 
   // The menu closes with Escape or a tap anywhere else.
   useEffect(() => {
@@ -112,6 +136,7 @@ export function Composer({ placeholder, onSend }: ComposerProps) {
             ? { kind: "file", file: pending.file }
             : undefined;
       await onSend(draft, attachment);
+      stopTyping();
       setDraft("");
       setPending(null);
     } catch (err) {
@@ -245,7 +270,7 @@ export function Composer({ placeholder, onSend }: ComposerProps) {
           <textarea
             id="message"
             value={draft}
-            onChange={(e) => setDraft(e.target.value)}
+            onChange={(e) => changeDraft(e.target.value)}
             onKeyDown={(e) => {
               // Enter sends, Shift+Enter makes a new line (like WhatsApp Web).
               if (e.key === "Enter" && !e.shiftKey && !e.nativeEvent.isComposing) {

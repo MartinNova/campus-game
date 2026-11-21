@@ -6,10 +6,13 @@ import { useSearchParams } from "next/navigation";
 import { useCallback, useEffect, useState } from "react";
 import { Composer } from "@/components/messages/Composer";
 import { MessageList } from "@/components/messages/MessageList";
+import { TypingIndicator } from "@/components/messages/TypingIndicator";
 import { useCurrentUser } from "@/components/providers/CurrentUserProvider";
+import { usePresence } from "@/components/providers/PresenceProvider";
 import { Card } from "@/components/ui/Card";
 import { PageHeader } from "@/components/ui/PageHeader";
 import { groupUnread, memberSummary } from "@/lib/groups/groups";
+import { groupChatKey, typingInGroup, typingLabel } from "@/lib/presence/presence";
 import { groupService } from "@/lib/services/group.service";
 import type { GroupMessage } from "@/types/groups";
 import type { Attachment } from "@/types/messages";
@@ -20,6 +23,7 @@ import { useGroup } from "./useGroup";
 export function GroupChatView() {
   const groupId = useSearchParams().get("id") ?? "";
   const { user, users, ready } = useCurrentUser();
+  const { presence, setTyping } = usePresence();
   const userId = user?.id;
   const { group } = useGroup(groupId, userId);
 
@@ -87,6 +91,15 @@ export function GroupChatView() {
     );
   }
 
+  // Only members count; someone who just left the group doesn't show as typing in it.
+  const typers = typingInGroup(presence, group.id, user.id).filter((id) =>
+    group.members.some((m) => m.userId === id),
+  );
+  const typing = typingLabel(typers.map(nameOf));
+  const onlineCount = group.members.filter(
+    (m) => m.userId !== user.id && presence.online.has(m.userId),
+  ).length;
+
   return (
     <>
       <PageHeader title={group.name} backHref="/friends/messages" />
@@ -98,8 +111,11 @@ export function GroupChatView() {
           <GroupAvatar name={group.name} photoUrl={group.photoUrl} size={40} />
           <span className="min-w-0 flex-1">
             <span className="block truncate font-semibold">{group.name}</span>
-            <span className="text-muted block truncate text-sm">
-              {memberSummary(group, user.id, nameOf)}
+            <span
+              className={`block truncate text-sm ${typing ? "text-brand font-medium" : "text-muted"}`}
+            >
+              {typing ??
+                `${onlineCount > 0 ? `${onlineCount} online · ` : ""}${memberSummary(group, user.id, nameOf)}`}
             </span>
           </span>
           <ChevronRight className="text-muted/60 size-5 shrink-0" aria-hidden />
@@ -121,13 +137,19 @@ export function GroupChatView() {
           />
         )}
 
+        <TypingIndicator label={typing} />
+
         {error && (
           <p role="alert" className="text-sm text-red-700 dark:text-red-400">
             {error}
           </p>
         )}
 
-        <Composer placeholder="Message" onSend={send} />
+        <Composer
+          placeholder="Message"
+          onSend={send}
+          onTyping={(on) => setTyping(on ? groupChatKey(group.id) : null)}
+        />
       </div>
     </>
   );

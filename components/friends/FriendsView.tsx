@@ -4,6 +4,7 @@ import { Search, Users } from "lucide-react";
 import Link from "next/link";
 import { useEffect, useMemo, useState } from "react";
 import { useCurrentUser } from "@/components/providers/CurrentUserProvider";
+import { usePresence } from "@/components/providers/PresenceProvider";
 import { Avatar } from "@/components/ui/Avatar";
 import { Badge } from "@/components/ui/Badge";
 import { Card } from "@/components/ui/Card";
@@ -24,6 +25,7 @@ function matchesSearch(p: Profile, text: string): boolean {
 /** The Friends module: every student with a public profile, with filters. */
 export function FriendsView() {
   const { user, ready, mode } = useCurrentUser();
+  const { presence } = usePresence();
   const userId = user?.id;
   const [loaded, setLoaded] = useState<{ profiles: Profile[]; today: string } | null>(null);
   const [search, setSearch] = useState("");
@@ -152,6 +154,7 @@ export function FriendsView() {
                   username={p.username}
                   url={p.avatarUrl}
                   size={48}
+                  online={presence.online.has(p.userId)}
                 />
                 <span className="min-w-0 flex-1">
                   <span className="block truncate font-semibold">
