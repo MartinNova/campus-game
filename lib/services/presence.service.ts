@@ -1,4 +1,4 @@
-import { getSupabase } from "@/lib/supabase/client";
+import { getSupabase, namedChannel } from "@/lib/supabase/client";
 import { AUTH_MODE } from "@/lib/supabase/config";
 
 /**
@@ -38,7 +38,7 @@ const localPresenceService: PresenceService = {
 const supabasePresenceService: PresenceService = {
   goOnline(userId, onChange) {
     // One shared name, so everyone sees each other. Only PresenceProvider calls this, once.
-    const channel = getSupabase().channel("presence:online", {
+    const channel = namedChannel("presence:online", {
       config: { presence: { key: userId } },
     });
     channel
@@ -51,7 +51,7 @@ const supabasePresenceService: PresenceService = {
     return () => void getSupabase().removeChannel(channel);
   },
   joinChat(chatKey, userId, onTyping) {
-    const channel = getSupabase().channel(`typing:${chatKey}`, {
+    const channel = namedChannel(`typing:${chatKey}`, {
       config: { broadcast: { self: false } },
     });
     channel

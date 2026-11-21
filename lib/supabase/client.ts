@@ -23,3 +23,16 @@ export function getSupabase(): SupabaseClient {
 export function liveChannel(name: string) {
   return getSupabase().channel(`${name}:${crypto.randomUUID()}`);
 }
+
+/**
+ * A channel with the *same* name on every device, for Presence ("who is online") and
+ * typing signals, where everybody must meet in one channel. Use it for one listener per
+ * browser only. A leftover channel of that name (e.g. from a page that just closed) is
+ * dropped first, so adding listeners never hits an already subscribed channel.
+ */
+export function namedChannel(name: string, params?: Parameters<SupabaseClient["channel"]>[1]) {
+  const supabase = getSupabase();
+  const topic = `realtime:${name}`;
+  supabase.realtime.channels = supabase.realtime.channels.filter((c) => c.topic !== topic);
+  return supabase.channel(name, params);
+}
