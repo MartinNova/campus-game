@@ -1,10 +1,15 @@
+import { BookOpen, CalendarDays, GraduationCap, ListChecks, Receipt } from "lucide-react";
 import type { Metadata } from "next";
 import { Badge } from "@/components/ui/Badge";
-import { LinkCard } from "@/components/ui/Card";
+import { HubHero } from "@/components/ui/HubHero";
 import { PageHeader } from "@/components/ui/PageHeader";
+import { TILE_COLORS, Tile } from "@/components/ui/Tile";
 import { STUDY_MODULES } from "@/lib/config/navigation";
 
 export const metadata: Metadata = { title: "Study Hub" };
+
+/** One colour per module, in the order of STUDY_MODULES. */
+const COLORS: (keyof typeof TILE_COLORS)[] = ["blue", "amber", "pink"];
 
 export default function StudyHubPage() {
   return (
@@ -13,14 +18,30 @@ export default function StudyHubPage() {
         title="Study Hub"
         subtitle="Your timetable, uni to-dos and payment deadlines in one place."
       />
-      <div className="grid gap-3">
-        {STUDY_MODULES.map(({ href, label, description, icon: Icon, status }) => (
-          <LinkCard
+      <HubHero
+        gradient="from-[#0a84ff] to-[#0b2a4a]"
+        icons={
+          <>
+            <CalendarDays />
+            <GraduationCap />
+            <ListChecks />
+            <BookOpen />
+            <Receipt />
+          </>
+        }
+        headline="Stay on top of your semester."
+        text="Lectures, exams, to-dos and tuition dates, so nothing slips through."
+      />
+      <div className="grid grid-cols-2 gap-3">
+        {STUDY_MODULES.map(({ href, label, description, icon: Icon, status }, i) => (
+          <Tile
             key={href}
             href={href}
             title={label}
             description={description}
-            icon={<Icon className="size-5" aria-hidden />}
+            icon={<Icon className="size-6" aria-hidden />}
+            color={COLORS[i % COLORS.length]}
+            wide={i === 0}
             badge={status === "soon" ? <Badge>Soon</Badge> : null}
           />
         ))}

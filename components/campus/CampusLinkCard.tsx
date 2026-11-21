@@ -8,6 +8,7 @@ import {
   UtensilsCrossed,
 } from "lucide-react";
 import Link from "next/link";
+import { TILE_COLORS, Tile } from "@/components/ui/Tile";
 import type { CampusLink } from "@/types/campus";
 
 const ICONS = {
@@ -49,5 +50,30 @@ export function CampusLinkCard({ link }: { link: CampusLink }) {
     <Link href={link.href} className={CARD_CLASS}>
       {content}
     </Link>
+  );
+}
+
+/** Colour per kind of link, so the Campus page reads at a glance. */
+const COLORS = {
+  "book-search": "teal",
+  "study-room": "navy",
+  map: "green",
+  canteen: "orange",
+  train: "blue",
+  home: "purple",
+} satisfies Record<CampusLink["icon"], keyof typeof TILE_COLORS>;
+
+/** Big tile version for the Campus overview page. */
+export function CampusTile({ link, wide }: { link: CampusLink; wide?: boolean }) {
+  const Icon = ICONS[link.icon];
+  return (
+    <Tile
+      href={link.href}
+      title={link.title}
+      description={link.description}
+      icon={<Icon className="size-6" aria-hidden />}
+      color={COLORS[link.icon]}
+      wide={wide}
+    />
   );
 }
