@@ -3,6 +3,7 @@
 import { Search, Users } from "lucide-react";
 import Link from "next/link";
 import { useEffect, useMemo, useState } from "react";
+import { OnlineDot } from "@/components/presence/OnlineDot";
 import { useCurrentUser } from "@/components/providers/CurrentUserProvider";
 import { Avatar } from "@/components/ui/Avatar";
 import { Badge } from "@/components/ui/Badge";
@@ -146,13 +147,15 @@ export function FriendsView() {
                 href={`/friends/profile?u=${p.username}`}
                 className="border-border bg-surface hover:border-brand flex items-center gap-3 rounded-2xl border p-3 shadow-sm transition-colors"
               >
-                <Avatar
-                  firstName={p.firstName}
-                  lastName={p.lastName}
-                  username={p.username}
-                  url={p.avatarUrl}
-                  size={48}
-                />
+                <OnlineDot userId={p.userId}>
+                  <Avatar
+                    firstName={p.firstName}
+                    lastName={p.lastName}
+                    username={p.username}
+                    url={p.avatarUrl}
+                    size={48}
+                  />
+                </OnlineDot>
                 <span className="min-w-0 flex-1">
                   <span className="block truncate font-semibold">
                     {[p.firstName, p.lastName].filter(Boolean).join(" ") || `@${p.username}`}{" "}
