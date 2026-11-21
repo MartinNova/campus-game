@@ -4,6 +4,7 @@ import { BottomNav } from "@/components/layout/BottomNav";
 import { Header } from "@/components/layout/Header";
 import { CurrentUserProvider } from "@/components/providers/CurrentUserProvider";
 import { PageTitleProvider } from "@/components/providers/PageTitleProvider";
+import { PresenceProvider } from "@/components/providers/PresenceProvider";
 import { WelcomeGate } from "@/components/welcome/WelcomeGate";
 import { APP_DESCRIPTION, APP_NAME, APP_SHORT_NAME } from "@/lib/config/app";
 import "./globals.css";
@@ -34,13 +35,15 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
     <html lang="en" className={`${geistSans.variable} ${geistMono.variable} h-full antialiased`}>
       <body className="flex min-h-full flex-col font-sans">
         <CurrentUserProvider>
-          <WelcomeGate>
-            <PageTitleProvider>
-              <Header />
-              <main className="mx-auto w-full max-w-2xl flex-1 px-4 pt-2 pb-36">{children}</main>
-              <BottomNav />
-            </PageTitleProvider>
-          </WelcomeGate>
+          <PresenceProvider>
+            <WelcomeGate>
+              <PageTitleProvider>
+                <Header />
+                <main className="mx-auto w-full max-w-2xl flex-1 px-4 pt-2 pb-36">{children}</main>
+                <BottomNav />
+              </PageTitleProvider>
+            </WelcomeGate>
+          </PresenceProvider>
         </CurrentUserProvider>
       </body>
     </html>

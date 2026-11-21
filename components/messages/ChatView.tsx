@@ -4,17 +4,21 @@ import Link from "next/link";
 import { useSearchParams } from "next/navigation";
 import { useCallback, useEffect, useState } from "react";
 import { useCurrentUser } from "@/components/providers/CurrentUserProvider";
+import { usePresence } from "@/components/providers/PresenceProvider";
 import { Avatar } from "@/components/ui/Avatar";
 import { Card } from "@/components/ui/Card";
+import { directChatKey, isTypingToMe } from "@/lib/presence/presence";
 import { messageService } from "@/lib/services/message.service";
 import type { Attachment, Message } from "@/types/messages";
 import { Composer } from "./Composer";
 import { MessageList } from "./MessageList";
+import { TypingIndicator } from "./TypingIndicator";
 
 /** One chat with another student (?u=username), live. */
 export function ChatView() {
   const username = useSearchParams().get("u") ?? "";
   const { user, users, ready } = useCurrentUser();
+  const { presence, setTyping } = usePresence();
   const other = users.find((u) => u.username === username.toLowerCase());
   const userId = user?.id;
   const otherId = other?.id;
@@ -43,6 +47,8 @@ export function ChatView() {
   useEffect(() => (userId ? messageService.onChange(userId, reload) : undefined), [userId, reload]);
 
   const messages = thread?.key === key ? thread.messages : null;
+  const online = !!otherId && presence.online.has(otherId);
+  const typing = !!otherId && !!userId && isTypingToMe(presence, otherId, userId);
 
   async function send(body: string, attachment?: Attachment) {
     if (!userId || !otherId) return;
@@ -92,10 +98,16 @@ export function ChatView() {
           username={other.username}
           url={other.avatarUrl}
           size={40}
+          online={online}
         />
         <span className="min-w-0">
           <span className="block truncate font-semibold">{name}</span>
-          <span className="text-muted block text-sm">View profile</span>
+          {/* Like WhatsApp: "typing…", else "Online", else a link hint. */}
+          <span
+            className={`block text-sm ${typing ? "text-brand font-medium" : online ? "text-[#248a3d] dark:text-[#30d158]" : "text-muted"}`}
+          >
+            {typing ? "typing…" : online ? "Online" : "View profile"}
+          </span>
         </span>
       </Link>
 
@@ -118,13 +130,19 @@ export function ChatView() {
         />
       )}
 
+      <TypingIndicator label={typing ? `${other.firstName || name} is typing…` : null} />
+
       {error && (
         <p role="alert" className="text-sm text-red-700 dark:text-red-400">
           {error}
         </p>
       )}
 
-      <Composer placeholder={`Message ${other.firstName || name}`} onSend={send} />
+      <Composer
+        placeholder={`Message ${other.firstName || name}`}
+        onSend={send}
+        onTyping={(on) => setTyping(on && otherId ? directChatKey(otherId) : null)}
+      />
     </div>
   );
 }
