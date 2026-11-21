@@ -27,18 +27,28 @@ export async function loadReactions(
   return byMessage;
 }
 
-/** Sets (or with null removes) your reaction to a message. */
+/**
+ * Sets (or with null removes) your reaction to a message.
+ * Remove-then-add instead of an upsert: an upsert needs the right to change every column
+ * (message and person too), but the database only lets you change your emoji.
+ */
 export async function saveReaction(
   table: ReactionTable,
   messageId: string,
   userId: string,
   emoji: string | null,
 ) {
-  const reactions = getSupabase().from(table);
-  const { error } = emoji
-    ? await reactions.upsert({ message_id: messageId, user_id: userId, emoji })
-    : await reactions.delete().eq("message_id", messageId).eq("user_id", userId);
-  if (error) throw new Error(error.message);
+  const removed = await getSupabase()
+    .from(table)
+    .delete()
+    .eq("message_id", messageId)
+    .eq("user_id", userId);
+  if (removed.error) throw new Error(removed.error.message);
+  if (!emoji) return;
+  const added = await getSupabase()
+    .from(table)
+    .insert({ message_id: messageId, user_id: userId, emoji });
+  if (added.error) throw new Error(added.error.message);
 }
 
 /** Deletes your own message and then its picture or file. */
