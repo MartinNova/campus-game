@@ -2,15 +2,17 @@
 
 import { CalendarPlus } from "lucide-react";
 import Link from "next/link";
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useCurrentUser } from "@/components/providers/CurrentUserProvider";
 import { Button } from "@/components/ui/Button";
 import { Card } from "@/components/ui/Card";
+import { useToast } from "@/components/ui/Toast";
 import { PLAYTOMIC_HOME } from "@/lib/padel/clubs";
 import { fromISODate, upcomingDates } from "@/lib/padel/dates";
 import { filterMatches } from "@/lib/padel/matches";
 import { padelService } from "@/lib/services/padel.service";
-import { PADEL_LEVELS, type NewPadelMatch, type PadelMatch } from "@/types/padel";
+import { celebrate } from "@/lib/ui/confetti";
+import { PADEL_LEVELS, freeSpots, type NewPadelMatch, type PadelMatch } from "@/types/padel";
 import { DayStrip } from "./DayStrip";
 import { MatchCard } from "./MatchCard";
 import { NewMatchForm } from "./NewMatchForm";
@@ -51,6 +53,22 @@ export function PadelView() {
   // Live: new matches and players from other devices appear without reloading.
   useEffect(() => padelService.onChange(() => void reload()), [reload]);
 
+  const toast = useToast();
+  const myPending = useRef<Set<string>>(new Set());
+  useEffect(() => {
+    if (!matches || !userId) return;
+    const pendingNow = new Set<string>();
+    for (const m of matches) {
+      const mine = m.requests?.find((r) => r.userId === userId);
+      if (mine?.status === "pending") pendingNow.add(m.id);
+      else if (mine?.status === "accepted" && myPending.current.has(m.id)) {
+        celebrate();
+        toast("You're in! See you on court 🎾");
+      }
+    }
+    myPending.current = pendingNow;
+  }, [matches, userId, toast]);
+
   const levelMatches = useMemo(() => filterMatches(matches ?? [], { level }), [matches, level]);
   const counts = useMemo(() => {
     const result: Record<string, number> = {};
@@ -59,11 +77,20 @@ export function PadelView() {
   }, [levelMatches]);
   const dayMatches = levelMatches.filter((m) => m.date === selectedDate);
 
-  async function run(matchId: string, action: () => Promise<unknown>) {
+  async function run(matchId: string, action: () => Promise<unknown>, success?: string) {
     setBusyId(matchId);
     setError(null);
     try {
-      await action();
+      const result = await action();
+      if (success) toast(success);
+      // Accepting the last free place fills the court: celebrate!
+      if (result && typeof result === "object" && "playerIds" in result) {
+        const match = result as PadelMatch;
+        if (freeSpots(match) === 0 && match.createdBy === user?.id) {
+          celebrate();
+          toast("Court full, enjoy the game! 🎾");
+        }
+      }
       await reload();
     } catch (err) {
       setError(err instanceof Error ? err.message : "Something went wrong.");
@@ -75,6 +102,7 @@ export function PadelView() {
   async function handleCreate(input: NewPadelMatch) {
     if (!user) throw new Error("Please sign in first.");
     const created = await padelService.createMatch(input, user.id);
+    toast("Court posted");
     setShowForm(false);
     setSelectedDate(created.date);
     await reload();
@@ -185,14 +213,24 @@ export function PadelView() {
               users={users}
               busy={busyId === m.id}
               onRequest={(note) =>
-                run(m.id, () => padelService.requestToJoin(m.id, user!.id, note))
+                run(m.id, () => padelService.requestToJoin(m.id, user!.id, note), "Request sent")
               }
-              onWithdraw={() => run(m.id, () => padelService.withdrawRequest(m.id, user!.id))}
+              onWithdraw={() =>
+                run(m.id, () => padelService.withdrawRequest(m.id, user!.id), "Request taken back")
+              }
               onRespond={(requestId, accept) =>
-                run(m.id, () => padelService.respondToRequest(m.id, requestId, accept, user!.id))
+                run(
+                  m.id,
+                  () => padelService.respondToRequest(m.id, requestId, accept, user!.id),
+                  accept ? "Player added" : "Request declined",
+                )
               }
-              onLeave={() => run(m.id, () => padelService.leaveMatch(m.id, user!.id))}
-              onCancel={() => run(m.id, () => padelService.cancelMatch(m.id, user!.id))}
+              onLeave={() =>
+                run(m.id, () => padelService.leaveMatch(m.id, user!.id), "You left the match")
+              }
+              onCancel={() =>
+                run(m.id, () => padelService.cancelMatch(m.id, user!.id), "Match cancelled")
+              }
             />
           ))}
         </div>

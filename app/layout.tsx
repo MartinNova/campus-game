@@ -5,6 +5,7 @@ import { Header } from "@/components/layout/Header";
 import { CurrentUserProvider } from "@/components/providers/CurrentUserProvider";
 import { PageTitleProvider } from "@/components/providers/PageTitleProvider";
 import { PresenceProvider } from "@/components/providers/PresenceProvider";
+import { ToastProvider } from "@/components/ui/Toast";
 import { WelcomeGate } from "@/components/welcome/WelcomeGate";
 import { APP_DESCRIPTION, APP_NAME, APP_SHORT_NAME } from "@/lib/config/app";
 import "./globals.css";
@@ -36,13 +37,17 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
       <body className="flex min-h-full flex-col font-sans">
         <CurrentUserProvider>
           <PresenceProvider>
-            <WelcomeGate>
-              <PageTitleProvider>
-                <Header />
-                <main className="mx-auto w-full max-w-2xl flex-1 px-4 pt-2 pb-36">{children}</main>
-                <BottomNav />
-              </PageTitleProvider>
-            </WelcomeGate>
+            <ToastProvider>
+              <WelcomeGate>
+                <PageTitleProvider>
+                  <Header />
+                  <main className="mx-auto w-full max-w-2xl flex-1 px-4 pt-2 pb-36">
+                    {children}
+                  </main>
+                  <BottomNav />
+                </PageTitleProvider>
+              </WelcomeGate>
+            </ToastProvider>
           </PresenceProvider>
         </CurrentUserProvider>
       </body>

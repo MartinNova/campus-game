@@ -6,6 +6,7 @@ import { useCallback, useEffect, useState, useSyncExternalStore } from "react";
 import { useCurrentUser } from "@/components/providers/CurrentUserProvider";
 import { Button } from "@/components/ui/Button";
 import { Card } from "@/components/ui/Card";
+import { useToast } from "@/components/ui/Toast";
 import { toISODate } from "@/lib/padel/dates";
 import { filterListings } from "@/lib/rooms/rooms";
 import { roomService } from "@/lib/services/rooms.service";
@@ -24,6 +25,7 @@ const readToday = () => toISODate(new Date());
 /** Rooms & flats board: free rooms and students looking for one. */
 export function RoomsView() {
   const { user, users, ready, mode } = useCurrentUser();
+  const toast = useToast();
   const userId = user?.id;
   // Today is only known in the browser (the page is prerendered).
   const today = useSyncExternalStore(noSubscription, readToday, () => null);
@@ -53,6 +55,7 @@ export function RoomsView() {
   async function handleCreate(input: NewRoomListing, photos: Blob[]) {
     if (!user) throw new Error("Please sign in first.");
     await roomService.createListing(input, photos, user.id);
+    toast(input.kind === "offer" ? "Listing posted" : "Search posted");
     setShowForm(false);
     setKind(input.kind);
     await reload();
