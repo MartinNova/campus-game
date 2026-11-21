@@ -2,14 +2,18 @@
 
 import Link from "next/link";
 import { useSearchParams } from "next/navigation";
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
+import { OnlineDot } from "@/components/presence/OnlineDot";
+import { useIsOnline } from "@/components/presence/PresenceProvider";
 import { useCurrentUser } from "@/components/providers/CurrentUserProvider";
 import { Avatar } from "@/components/ui/Avatar";
 import { Card } from "@/components/ui/Card";
 import { messageService } from "@/lib/services/message.service";
+import { directChatKey, presenceService } from "@/lib/services/presence.service";
 import type { Attachment, Message } from "@/types/messages";
 import { Composer } from "./Composer";
 import { MessageList } from "./MessageList";
+import { TypingBubble } from "./TypingBubble";
 
 /** One chat with another student (?u=username), live. */
 export function ChatView() {
@@ -43,6 +47,44 @@ export function ChatView() {
   useEffect(() => (userId ? messageService.onChange(userId, reload) : undefined), [userId, reload]);
 
   const messages = thread?.key === key ? thread.messages : null;
+
+  // "is typing…": shown until 3 s after the other person's last keystroke.
+  const otherOnline = useIsOnline(otherId);
+  const [typingAt, setTypingAt] = useState(0);
+  const [now, setNow] = useState(0);
+  const chat = useRef<{ typing: () => void } | null>(null);
+  const lastSent = useRef(0);
+  useEffect(() => {
+    if (!userId || !otherId) return;
+    const joined = presenceService.joinChat(directChatKey(userId, otherId), userId, () => {
+      const t = Date.now();
+      setTypingAt(t);
+      setNow(t);
+    });
+    chat.current = joined;
+    return () => {
+      chat.current = null;
+      joined.leave();
+    };
+  }, [userId, otherId]);
+  useEffect(() => {
+    if (!typingAt) return;
+    const id = setInterval(() => setNow(Date.now()), 500);
+    return () => clearInterval(id);
+  }, [typingAt]);
+  // A message from them after they started typing ends "typing…" right away.
+  const lastFromOther = messages?.filter((m) => m.senderId === otherId).at(-1)?.createdAt;
+  const otherTyping =
+    typingAt > 0 &&
+    now - typingAt < 3000 &&
+    !(lastFromOther && new Date(lastFromOther).getTime() > typingAt);
+
+  function handleTyping() {
+    // At most one signal every 2 seconds.
+    if (Date.now() - lastSent.current < 2000) return;
+    lastSent.current = Date.now();
+    chat.current?.typing();
+  }
 
   async function send(body: string, attachment?: Attachment) {
     if (!userId || !otherId) return;
@@ -86,16 +128,23 @@ export function ChatView() {
         href={`/friends/profile?u=${other.username}`}
         className="bg-surface focus-visible:outline-brand active:bg-brand/5 flex items-center gap-3 rounded-3xl p-3 transition focus-visible:outline-2 active:scale-[0.98]"
       >
-        <Avatar
-          firstName={other.firstName}
-          lastName={other.lastName}
-          username={other.username}
-          url={other.avatarUrl}
-          size={40}
-        />
+        <OnlineDot userId={other.id}>
+          <Avatar
+            firstName={other.firstName}
+            lastName={other.lastName}
+            username={other.username}
+            url={other.avatarUrl}
+            size={40}
+          />
+        </OnlineDot>
         <span className="min-w-0">
           <span className="block truncate font-semibold">{name}</span>
-          <span className="text-muted block text-sm">View profile</span>
+          <span
+            className={`block text-sm ${otherTyping || otherOnline ? "text-green-600 dark:text-green-400" : "text-muted"}`}
+            aria-live="polite"
+          >
+            {otherTyping ? "typing…" : otherOnline ? "online" : "View profile"}
+          </span>
         </span>
       </Link>
 
@@ -118,13 +167,19 @@ export function ChatView() {
         />
       )}
 
+      {otherTyping && <TypingBubble name={other.firstName || name} />}
+
       {error && (
         <p role="alert" className="text-sm text-red-700 dark:text-red-400">
           {error}
         </p>
       )}
 
-      <Composer placeholder={`Message ${other.firstName || name}`} onSend={send} />
+      <Composer
+        placeholder={`Message ${other.firstName || name}`}
+        onSend={send}
+        onTyping={handleTyping}
+      />
     </div>
   );
 }

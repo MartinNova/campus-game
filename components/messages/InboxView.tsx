@@ -4,6 +4,7 @@ import { MessageCircle, Users } from "lucide-react";
 import Link from "next/link";
 import { GroupAvatar } from "@/components/groups/GroupAvatar";
 import { useMyGroups } from "@/components/groups/useMyGroups";
+import { OnlineDot } from "@/components/presence/OnlineDot";
 import { useCurrentUser } from "@/components/providers/CurrentUserProvider";
 import { Avatar } from "@/components/ui/Avatar";
 import { Card } from "@/components/ui/Card";
@@ -60,13 +61,15 @@ export function InboxView() {
         key: `u:${otherUserId}`,
         href: other?.username ? `/friends/chat?u=${other.username}` : "/friends/messages",
         avatar: (
-          <Avatar
-            firstName={other?.firstName ?? "?"}
-            lastName={other?.lastName ?? ""}
-            username={other?.username}
-            url={other?.avatarUrl}
-            size={52}
-          />
+          <OnlineDot userId={otherUserId}>
+            <Avatar
+              firstName={other?.firstName ?? "?"}
+              lastName={other?.lastName ?? ""}
+              username={other?.username}
+              url={other?.avatarUrl}
+              size={52}
+            />
+          </OnlineDot>
         ),
         name: other
           ? [other.firstName, other.lastName].filter(Boolean).join(" ") || `@${other.username}`

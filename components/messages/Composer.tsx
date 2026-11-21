@@ -24,6 +24,8 @@ interface ComposerProps {
   placeholder: string;
   /** Throws to show an error; the draft is kept then. */
   onSend: (body: string, attachment?: Attachment) => Promise<void>;
+  /** Called while the user types (for "is typing…" on the other phone). */
+  onTyping?: () => void;
 }
 
 /** The attach menu, like WhatsApp: photo library, camera, or a document. */
@@ -37,7 +39,7 @@ const ATTACH_OPTIONS = [
  * Message field with one paperclip (photos, camera, document), fixed to the bottom of the screen
  * (pages using it hide the tab bar, like WhatsApp and iMessage do in a chat).
  */
-export function Composer({ placeholder, onSend }: ComposerProps) {
+export function Composer({ placeholder, onSend, onTyping }: ComposerProps) {
   const [draft, setDraft] = useState("");
   const [pending, setPending] = useState<Pending | null>(null);
   const [sending, setSending] = useState(false);
@@ -245,7 +247,10 @@ export function Composer({ placeholder, onSend }: ComposerProps) {
           <textarea
             id="message"
             value={draft}
-            onChange={(e) => setDraft(e.target.value)}
+            onChange={(e) => {
+              setDraft(e.target.value);
+              if (e.target.value) onTyping?.();
+            }}
             onKeyDown={(e) => {
               // Enter sends, Shift+Enter makes a new line (like WhatsApp Web).
               if (e.key === "Enter" && !e.shiftKey && !e.nativeEvent.isComposing) {

@@ -151,3 +151,23 @@ body {
     transform: scale(0.85) translateY(8px);
   }
 }
+
+/* "is typing…" dots bounce one after another. */
+@media (prefers-reduced-motion: no-preference) {
+  .typing-dot {
+    animation: typing-dot 1s ease-in-out infinite;
+  }
+}
+
+@keyframes typing-dot {
+  0%,
+  60%,
+  100% {
+    transform: none;
+    opacity: 0.5;
+  }
+  30% {
+    transform: translateY(-4px);
+    opacity: 1;
+  }
+}
