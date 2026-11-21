@@ -134,6 +134,7 @@ export function GroupChatView() {
             knownUsernames={knownUsernames}
             label={`Group chat ${group.name}`}
             nameOf={nameOf}
+            senderOf={(id) => users.find((u) => u.id === id)}
           />
         )}
 
