@@ -10,17 +10,35 @@ interface AvatarProps {
   /** Diameter in pixels. */
   size?: number;
   className?: string;
+  /** Green dot: has the app open right now. */
+  online?: boolean;
 }
 
-/** Round profile picture with an initials fallback. */
-export function Avatar({
+/** Round profile picture with an initials fallback, and a green dot while online. */
+export function Avatar({ online, ...props }: AvatarProps) {
+  if (!online) return <AvatarImage {...props} />;
+  const dot = Math.max(10, Math.round((props.size ?? 32) * 0.28));
+  return (
+    <span className="relative inline-flex shrink-0">
+      <AvatarImage {...props} />
+      <span
+        style={{ width: dot, height: dot }}
+        className="presence-dot ring-surface absolute right-0 bottom-0 rounded-full bg-[#34c759] ring-2"
+      >
+        <span className="sr-only">Online</span>
+      </span>
+    </span>
+  );
+}
+
+function AvatarImage({
   firstName,
   lastName,
   username,
   url,
   size = 32,
   className = "",
-}: AvatarProps) {
+}: Omit<AvatarProps, "online">) {
   const style = { width: size, height: size, fontSize: Math.max(10, size * 0.38) };
   if (url) {
     return (
