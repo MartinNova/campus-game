@@ -1,20 +1,10 @@
 "use client";
 
-import { Home, TrainFront, Trophy, Users } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
 import { setGuest } from "@/lib/welcome/guest";
-
-const FEATURES = [
-  { icon: Users, title: "Meet Nova students", text: "Find classmates by programme and sport." },
-  { icon: Trophy, title: "Play together", text: "Join padel matches and runs, or post your own." },
-  { icon: Home, title: "Rooms & flats", text: "Find a room near campus or pass yours on." },
-  {
-    icon: TrainFront,
-    title: "Your day, sorted",
-    text: "Next trains, deadlines and your timetable.",
-  },
-];
+import { AppPreview } from "./AppPreview";
+import { StudentCount } from "./StudentCount";
 
 /** First screen for signed-out visitors: what the app does, then sign in or look around. */
 export function WelcomeScreen() {
@@ -30,28 +20,19 @@ export function WelcomeScreen() {
         className="h-9 w-[189px] max-w-none mix-blend-multiply dark:mix-blend-screen dark:invert"
       />
 
-      <h1 className="mt-10 text-4xl leading-tight font-bold tracking-tight">
+      <h1 className="mt-8 text-4xl leading-tight font-bold tracking-tight">
         Your campus life in one app
       </h1>
       <p className="text-muted mt-3 text-lg">
         Sport, friends, rooms and everything you need at Nova SBE.
       </p>
 
-      <ul className="mt-8 grid gap-4">
-        {FEATURES.map(({ icon: Icon, title, text }) => (
-          <li key={title} className="flex items-start gap-3">
-            <span className="bg-brand/10 text-brand flex size-10 shrink-0 items-center justify-center rounded-xl">
-              <Icon className="size-5" aria-hidden />
-            </span>
-            <span>
-              <span className="block font-semibold">{title}</span>
-              <span className="text-muted block text-sm">{text}</span>
-            </span>
-          </li>
-        ))}
-      </ul>
+      <div className="mt-8">
+        <AppPreview />
+      </div>
 
-      <div className="mt-auto grid gap-3 pt-10">
+      <div className="mt-auto grid gap-3 pt-8">
+        <StudentCount />
         <Link
           href="/login?tab=signup"
           className="bg-brand text-brand-foreground flex h-12 items-center justify-center rounded-xl text-base font-semibold hover:opacity-90"

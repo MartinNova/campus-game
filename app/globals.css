@@ -165,3 +165,18 @@ body {
     transform: scale(0.4) translateY(12px);
   }
 }
+
+/* Soft "live" pulse around a dot (e.g. the student count on the welcome screen). */
+@media (prefers-reduced-motion: no-preference) {
+  .live-ping {
+    animation: live-ping 1.6s cubic-bezier(0, 0, 0.2, 1) infinite;
+  }
+}
+
+@keyframes live-ping {
+  75%,
+  100% {
+    transform: scale(2.2);
+    opacity: 0;
+  }
+}
