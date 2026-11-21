@@ -23,3 +23,11 @@ export function getSupabase(): SupabaseClient {
 export function liveChannel(name: string) {
   return getSupabase().channel(`${name}:${crypto.randomUUID()}`);
 }
+
+/**
+ * The one shared presence channel ("who is online"). Unlike liveChannel() its name must be the
+ * same for everyone, so only lib/services/presence.service.ts may open it, and only once per tab.
+ */
+export function presenceChannel(name: string, userId: string) {
+  return getSupabase().channel(name, { config: { presence: { key: userId } } });
+}

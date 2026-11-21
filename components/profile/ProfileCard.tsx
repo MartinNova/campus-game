@@ -1,5 +1,8 @@
+"use client";
+
 import { CalendarClock, GraduationCap, IdCard, Languages } from "lucide-react";
 import Image from "next/image";
+import { usePresence } from "@/components/providers/PresenceProvider";
 import { Avatar } from "@/components/ui/Avatar";
 import { Badge } from "@/components/ui/Badge";
 import { Card } from "@/components/ui/Card";
@@ -15,6 +18,7 @@ interface ProfileCardProps {
 
 /** How a student appears to others: picture, name, programme, interests. */
 export function ProfileCard({ profile: p, today }: ProfileCardProps) {
+  const { presence } = usePresence();
   const progress = studyProgress(p.studyStart, p.studyEnd, today);
   const period = [formatMonth(p.studyStart), formatMonth(p.studyEnd)].filter(Boolean).join(" – ");
 
@@ -27,6 +31,7 @@ export function ProfileCard({ profile: p, today }: ProfileCardProps) {
           username={p.username}
           url={p.avatarUrl}
           size={80}
+          online={presence.online.has(p.userId)}
         />
         <div className="min-w-0">
           <h2 className="truncate text-xl font-bold">

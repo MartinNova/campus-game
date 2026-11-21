@@ -5,6 +5,7 @@ import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useState } from "react";
 import { useCurrentUser } from "@/components/providers/CurrentUserProvider";
+import { usePresence } from "@/components/providers/PresenceProvider";
 import { Sheet } from "@/components/timetable/Sheet";
 import { Avatar } from "@/components/ui/Avatar";
 import { Card } from "@/components/ui/Card";
@@ -30,6 +31,7 @@ export function GroupInfoView() {
   const groupId = useSearchParams().get("id") ?? "";
   const router = useRouter();
   const { user, users, ready } = useCurrentUser();
+  const { presence } = usePresence();
   const { group, reload } = useGroup(groupId, user?.id);
 
   const [editingName, setEditingName] = useState<string | null>(null);
@@ -217,6 +219,7 @@ export function GroupInfoView() {
                       username={u?.username}
                       url={u?.avatarUrl}
                       size={40}
+                      online={!isMe && presence.online.has(m.userId)}
                     />
                     <span className={ROW_INNER}>
                       <span className="min-w-0 flex-1">
