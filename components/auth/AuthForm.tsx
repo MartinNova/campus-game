@@ -185,7 +185,7 @@ export function AuthForm() {
       }
       await refresh();
       // New accounts first fill in their profile; returning users go where they came from.
-      router.push(tab === "signup" ? "/profile" : next);
+      router.push(tab === "signup" ? "/onboarding" : next);
     } catch (err) {
       setError(err instanceof Error ? err.message : "Something went wrong.");
     } finally {
