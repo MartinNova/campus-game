@@ -16,6 +16,18 @@ export interface MessageFile {
   type: string;
 }
 
+/** An emoji reaction; one per person and message. */
+export interface Reaction {
+  userId: string;
+  emoji: string;
+}
+
+/** Extras when sending: a reply to an earlier message of the same chat, or a forwarded copy. */
+export interface SendOptions {
+  replyToId?: string | null;
+  forwarded?: boolean;
+}
+
 export interface Message {
   id: string;
   senderId: string;
@@ -30,6 +42,11 @@ export interface Message {
   createdAt: string;
   /** When the recipient opened the chat; null = unread. */
   readAt: string | null;
+  /** The message this one answers; null = not a reply (or the original was deleted). */
+  replyToId: string | null;
+  /** Shown as "Forwarded" above the message. */
+  forwarded: boolean;
+  reactions: Reaction[];
 }
 
 /** One chat in the inbox: the other person and the latest message. */
@@ -53,7 +70,12 @@ export interface MessageService {
     otherUserId: string,
     body: string,
     attachment?: Attachment,
+    options?: SendOptions,
   ): Promise<Message>;
+  /** Your reaction to a message; null removes it. */
+  react(messageId: string, userId: string, emoji: string | null): Promise<void>;
+  /** Deletes your own message for both of you. */
+  remove(messageId: string, userId: string): Promise<void>;
   /** Marks everything the other person sent you as read. */
   markRead(userId: string, otherUserId: string): Promise<void>;
   /** Calls `listener` when a message to or from you arrives. Returns an unsubscribe function. */

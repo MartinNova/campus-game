@@ -2,7 +2,7 @@
  * Group chats (like WhatsApp groups): a name, an optional picture and members.
  * Implement `GroupService` in lib/services/group.service.ts.
  */
-import type { Attachment, MessageFile } from "./messages";
+import type { Attachment, MessageFile, Reaction, SendOptions } from "./messages";
 
 export const MAX_GROUP_NAME_LENGTH = 50;
 /** Including the creator. */
@@ -40,6 +40,11 @@ export interface GroupMessage {
   file: MessageFile | null;
   /** ISO timestamp. */
   createdAt: string;
+  /** The message this one answers; null = not a reply (or the original was deleted). */
+  replyToId: string | null;
+  /** Shown as "Forwarded" above the message. */
+  forwarded: boolean;
+  reactions: Reaction[];
 }
 
 /** One group in the inbox: the group, its latest message and your unread count. */
@@ -73,7 +78,12 @@ export interface GroupService {
     userId: string,
     body: string,
     attachment?: Attachment,
+    options?: SendOptions,
   ): Promise<GroupMessage>;
+  /** Your reaction to a group message; null removes it. */
+  react(messageId: string, userId: string, emoji: string | null): Promise<void>;
+  /** Deletes your own message for everyone in the group. */
+  remove(messageId: string, userId: string): Promise<void>;
   /** Marks the group as read for you (now). */
   markRead(groupId: string, userId: string): Promise<void>;
   /** Calls `listener` when groups or group messages change. Returns an unsubscribe function. */

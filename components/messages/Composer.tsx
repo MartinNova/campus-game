@@ -1,6 +1,14 @@
 "use client";
 
-import { Camera, FileText, Image as ImageIcon, Paperclip, SendHorizontal, X } from "lucide-react";
+import {
+  Camera,
+  FileText,
+  Image as ImageIcon,
+  Paperclip,
+  Reply,
+  SendHorizontal,
+  X,
+} from "lucide-react";
 import { useEffect, useRef, useState } from "react";
 import {
   FILE_ACCEPT,
@@ -27,6 +35,9 @@ interface ComposerProps {
   onSend: (body: string, attachment?: Attachment) => Promise<void>;
   /** Called with true while you type and false once you stop or send ("typing…" for others). */
   onTyping?: (typing: boolean) => void;
+  /** The message you're answering (shown above the field), like WhatsApp's reply. */
+  replyTo?: { name: string; preview: string } | null;
+  onCancelReply?: () => void;
 }
 
 /** The attach menu, like WhatsApp: photo library, camera, or a document. */
@@ -40,7 +51,7 @@ const ATTACH_OPTIONS = [
  * Message field with one paperclip (photos, camera, document), fixed to the bottom of the screen
  * (pages using it hide the tab bar, like WhatsApp and iMessage do in a chat).
  */
-export function Composer({ placeholder, onSend, onTyping }: ComposerProps) {
+export function Composer({ placeholder, onSend, onTyping, replyTo, onCancelReply }: ComposerProps) {
   const [draft, setDraft] = useState("");
   const [pending, setPending] = useState<Pending | null>(null);
   const [sending, setSending] = useState(false);
@@ -50,6 +61,12 @@ export function Composer({ placeholder, onSend, onTyping }: ComposerProps) {
   const cameraInput = useRef<HTMLInputElement>(null);
   const fileInput = useRef<HTMLInputElement>(null);
   const menu = useRef<HTMLDivElement>(null);
+  const field = useRef<HTMLTextAreaElement>(null);
+
+  // Choosing "Reply" puts the cursor in the field, ready to type.
+  useEffect(() => {
+    if (replyTo) field.current?.focus();
+  }, [replyTo]);
   const typingTimer = useRef<ReturnType<typeof setTimeout>>(undefined);
   const onTypingRef = useRef(onTyping);
   useEffect(() => {
@@ -156,6 +173,25 @@ export function Composer({ placeholder, onSend, onTyping }: ComposerProps) {
           <p role="alert" className="text-sm text-red-700 dark:text-red-400">
             {error}
           </p>
+        )}
+        {replyTo && (
+          <div className="bg-surface border-brand fade-in flex items-center gap-2 rounded-xl border-l-4 py-1.5 pr-1.5 pl-3">
+            <Reply className="text-brand size-4 shrink-0" aria-hidden />
+            <span className="min-w-0 flex-1">
+              <span className="text-brand block text-[13px] font-semibold">
+                Replying to {replyTo.name}
+              </span>
+              <span className="text-muted block truncate text-[13px]">{replyTo.preview}</span>
+            </span>
+            <button
+              type="button"
+              onClick={onCancelReply}
+              aria-label="Cancel reply"
+              className="text-muted hover:bg-border/60 flex size-8 shrink-0 items-center justify-center rounded-full"
+            >
+              <X className="size-4" aria-hidden />
+            </button>
+          </div>
         )}
         {pending && (
           <div className="relative w-fit max-w-full">
@@ -268,6 +304,7 @@ export function Composer({ placeholder, onSend, onTyping }: ComposerProps) {
             Message
           </label>
           <textarea
+            ref={field}
             id="message"
             value={draft}
             onChange={(e) => changeDraft(e.target.value)}

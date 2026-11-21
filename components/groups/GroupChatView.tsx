@@ -12,6 +12,8 @@ import { usePresence } from "@/components/providers/PresenceProvider";
 import { Card } from "@/components/ui/Card";
 import { PageHeader } from "@/components/ui/PageHeader";
 import { groupUnread, memberSummary } from "@/lib/groups/groups";
+import { messagePreview } from "@/lib/messages/messages";
+import { withReaction } from "@/lib/messages/reactions";
 import { groupChatKey, typingInGroup, typingLabel } from "@/lib/presence/presence";
 import { groupService } from "@/lib/services/group.service";
 import type { GroupMessage } from "@/types/groups";
@@ -29,6 +31,7 @@ export function GroupChatView() {
 
   const [thread, setThread] = useState<{ groupId: string; messages: GroupMessage[] } | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const [replyTo, setReplyTo] = useState<GroupMessage | null>(null);
   const knownUsernames = new Set(users.map((u) => u.username).filter((u): u is string => !!u));
 
   const reload = useCallback(() => {
@@ -59,8 +62,35 @@ export function GroupChatView() {
 
   async function send(body: string, attachment?: Attachment) {
     if (!userId) return;
-    await groupService.send(groupId, userId, body, attachment);
+    await groupService.send(groupId, userId, body, attachment, { replyToId: replyTo?.id });
+    setReplyTo(null);
     reload();
+  }
+
+  // Shown at once; the database confirms (or the reload undoes it).
+  function react(item: { id: string }, emoji: string | null) {
+    if (!userId) return;
+    setThread(
+      (t) =>
+        t && {
+          ...t,
+          messages: t.messages.map((m) =>
+            m.id === item.id ? { ...m, reactions: withReaction(m.reactions, userId, emoji) } : m,
+          ),
+        },
+    );
+    groupService.react(item.id, userId, emoji).then(reload, (err: unknown) => {
+      setError(err instanceof Error ? err.message : "Could not react.");
+      reload();
+    });
+  }
+
+  function remove(item: { id: string }) {
+    if (!userId) return;
+    if (replyTo?.id === item.id) setReplyTo(null);
+    groupService.remove(item.id, userId).then(reload, (err: unknown) => {
+      setError(err instanceof Error ? err.message : "Could not delete the message.");
+    });
   }
 
   if (!ready || (user && group === undefined)) {
@@ -134,6 +164,10 @@ export function GroupChatView() {
             knownUsernames={knownUsernames}
             label={`Group chat ${group.name}`}
             nameOf={nameOf}
+            authorOf={nameOf}
+            onReact={react}
+            onReply={(item) => setReplyTo(messages.find((m) => m.id === item.id) ?? null)}
+            onDelete={remove}
             senderOf={(id) => users.find((u) => u.id === id)}
           />
         )}
@@ -149,6 +183,13 @@ export function GroupChatView() {
         <Composer
           placeholder="Message"
           onSend={send}
+          replyTo={
+            replyTo && {
+              name: replyTo.senderId === user.id ? "yourself" : nameOf(replyTo.senderId),
+              preview: messagePreview(replyTo),
+            }
+          }
+          onCancelReply={() => setReplyTo(null)}
           onTyping={(on) => setTyping(on ? groupChatKey(group.id) : null)}
         />
       </div>
