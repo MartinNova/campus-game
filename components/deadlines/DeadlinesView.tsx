@@ -5,8 +5,10 @@ import { useState, useSyncExternalStore } from "react";
 import { Badge } from "@/components/ui/Badge";
 import { Button } from "@/components/ui/Button";
 import { Card } from "@/components/ui/Card";
+import { CountUp } from "@/components/ui/CountUp";
 import { NETPA_FINANCE_URL, PAYMENT_DEADLINES } from "@/data/deadlines";
 import {
+  daysUntil,
   deadlinesToIcs,
   relativeDay,
   splitDeadlines,
@@ -97,7 +99,15 @@ export function DeadlinesView() {
             <BellRing className="text-brand size-4" aria-hidden /> Next payment
           </p>
           <p className="mt-1 text-xl font-bold">{next.title}</p>
-          <p className="mt-0.5">
+          {daysUntil(next.date, today) > 1 && (
+            <p className="text-brand mt-2 text-5xl leading-none font-bold tracking-tight">
+              <CountUp value={daysUntil(next.date, today)} />
+              <span className="text-muted ml-2 text-lg font-semibold tracking-normal">
+                days to go
+              </span>
+            </p>
+          )}
+          <p className="mt-2">
             Due {formatDay(next.date, { weekday: "long", day: "numeric", month: "long" })} ·{" "}
             <span className="font-semibold">{relativeDay(next.date, today)}</span>
           </p>
