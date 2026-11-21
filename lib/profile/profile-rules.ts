@@ -27,10 +27,10 @@ export function validatePassword(password: string): string | null {
 }
 
 /** Returns an error message, or null if the profile can be saved. */
-/** Nova student numbers are digits only, e.g. "79109". Empty is fine (not everyone has one yet). */
+/** Nova student numbers are digits only, e.g. "12345". Empty is fine (not everyone has one yet). */
 export function validateStudentId(studentId: string): string | null {
   if (!studentId) return null;
-  return /^\d{4,10}$/.test(studentId) ? null : "Student ID: numbers only, e.g. 79109.";
+  return /^\d{4,10}$/.test(studentId) ? null : "Student ID: numbers only, e.g. 12345.";
 }
 
 export function validateProfileUpdate(update: ProfileUpdate): string | null {
