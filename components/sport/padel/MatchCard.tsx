@@ -1,6 +1,6 @@
 "use client";
 
-import { Clock, MapPin, MessageCircle, Users } from "lucide-react";
+import { Clock, MapPin, MessageCircle } from "lucide-react";
 import { useState } from "react";
 import Link from "next/link";
 import { Avatar } from "@/components/ui/Avatar";
@@ -11,6 +11,7 @@ import { playtomicUrlFor } from "@/lib/padel/clubs";
 import { myRequest, pendingRequests } from "@/lib/padel/matches";
 import { MAX_REQUEST_NOTE, formatLevel, freeSpots, type PadelMatch } from "@/types/padel";
 import type { User } from "@/types/user";
+import { PadelCourt } from "./PadelCourt";
 import { PlaytomicLink } from "./PlaytomicLink";
 
 interface MatchCardProps {
@@ -54,7 +55,6 @@ export function MatchCard({
     setAsking(false);
     setNote("");
   }
-  const players = match.playerIds.map((id) => ({ id, user: users.find((u) => u.id === id) }));
 
   return (
     <Card>
@@ -79,49 +79,15 @@ export function MatchCard({
         <Badge tone="brand">Level {formatLevel(match.level)}</Badge>
       </div>
 
-      <div className="mt-3 flex items-center gap-2 text-sm">
-        <Users className="text-muted size-4 shrink-0" aria-hidden />
-        <ul className="flex flex-wrap items-center gap-x-3 gap-y-1">
-          {players.map(({ id, user }) => {
-            const content = (
-              <>
-                {user && (
-                  <Avatar
-                    firstName={user.firstName}
-                    lastName={user.lastName}
-                    username={user.username}
-                    url={user.avatarUrl}
-                    size={24}
-                  />
-                )}
-                {user?.firstName ?? "Player"}
-              </>
-            );
-            return (
-              <li key={id}>
-                {user?.username ? (
-                  <Link
-                    href={`/friends/profile?u=${user.username}`}
-                    className="hover:text-brand flex items-center gap-1.5"
-                  >
-                    {content}
-                  </Link>
-                ) : (
-                  <span className="flex items-center gap-1.5">{content}</span>
-                )}
-              </li>
-            );
-          })}
-          {match.guestCount > 0 && (
-            <li className="text-muted">
-              +{match.guestCount} friend{match.guestCount > 1 ? "s" : ""}
-            </li>
-          )}
-          <li className="text-muted">
-            ({match.maxPlayers - spots}/{match.maxPlayers})
-          </li>
-        </ul>
-      </div>
+      <PadelCourt
+        match={match}
+        users={users}
+        onFreeSlot={
+          !isCreator && !isPlayer && !request && spots > 0 && !!currentUserId
+            ? () => setAsking(true)
+            : undefined
+        }
+      />
       {match.description && <p className="mt-2 text-sm">{match.description}</p>}
 
       {pending.length > 0 && (
