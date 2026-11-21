@@ -1,4 +1,3 @@
-import { BookOpen, CalendarDays, GraduationCap, ListChecks, Receipt } from "lucide-react";
 import type { Metadata } from "next";
 import { Badge } from "@/components/ui/Badge";
 import { HubHero } from "@/components/ui/HubHero";
@@ -19,16 +18,10 @@ export default function StudyHubPage() {
         subtitle="Your timetable, uni to-dos and payment deadlines in one place."
       />
       <HubHero
-        gradient="from-[#0a84ff] to-[#0b2a4a]"
-        icons={
-          <>
-            <CalendarDays />
-            <GraduationCap />
-            <ListChecks />
-            <BookOpen />
-            <Receipt />
-          </>
-        }
+        image={{
+          src: "/images/nova-study-banner.jpg",
+          alt: "Students in a bright lecture room at Nova SBE, listening to a professor.",
+        }}
         headline="Stay on top of your semester."
         text="Lectures, exams, to-dos and tuition dates, so nothing slips through."
       />

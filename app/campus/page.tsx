@@ -15,8 +15,8 @@ export default function CampusPage() {
       />
       <HubHero
         image={{
-          src: "/images/nova-canteen.png",
-          alt: "Students on the sunny Nova SBE campus in Carcavelos, with the sea behind the buildings.",
+          src: "/images/nova-campus-banner.jpg",
+          alt: "The Nova SBE campus in Carcavelos: glass buildings, young trees and a long pool under a blue sky.",
         }}
         headline="Life by the sea in Carcavelos."
         text="How to get here, where to live, where to eat and where to study."
