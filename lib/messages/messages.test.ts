@@ -24,6 +24,9 @@ const msg = (
   file: null,
   createdAt,
   readAt,
+  replyToId: null,
+  forwarded: false,
+  reactions: [],
 });
 
 describe("validateMessage", () => {

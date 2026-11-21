@@ -7,6 +7,7 @@ import {
 } from "@/lib/groups/groups";
 import { MAX_DEMO_FILE_BYTES, MAX_FILE_BYTES, validateFile } from "@/lib/messages/attachments";
 import { validateMessage } from "@/lib/messages/messages";
+import { withReaction } from "@/lib/messages/reactions";
 import { readJSON, writeJSON } from "@/lib/storage";
 import { getSupabase, liveChannel } from "@/lib/supabase/client";
 import { AUTH_MODE } from "@/lib/supabase/config";
@@ -26,6 +27,7 @@ import {
   toDataUrl,
   uploadAttachment,
 } from "./chat-files";
+import { deleteMessage, loadReactions, saveReaction } from "./chat-reactions";
 import { hasSession } from "./user.service";
 
 /** Private bucket: <group id>/<file>.jpg, readable only by the group's members. */
@@ -47,7 +49,18 @@ const GROUP_MESSAGES_KEY = "group-messages";
 const listeners = new Set<() => void>();
 
 const loadGroups = () => readJSON<ChatGroup[]>(GROUPS_KEY, []);
-const loadMessages = () => readJSON<GroupMessage[]>(GROUP_MESSAGES_KEY, []);
+// Messages saved before replies and reactions existed lack those fields.
+const loadMessages = () =>
+  readJSON<GroupMessage[]>(GROUP_MESSAGES_KEY, []).map((m) => ({
+    ...m,
+    replyToId: m.replyToId ?? null,
+    forwarded: m.forwarded ?? false,
+    reactions: m.reactions ?? [],
+  }));
+function saveMessages(messages: GroupMessage[]) {
+  writeJSON(GROUP_MESSAGES_KEY, messages);
+  notify();
+}
 const notify = () => listeners.forEach((listener) => listener());
 
 function saveGroups(groups: ChatGroup[]) {
@@ -158,7 +171,7 @@ const localGroupService: GroupService = {
       };
     });
   },
-  async send(groupId, userId, body, attachment) {
+  async send(groupId, userId, body, attachment, options) {
     checkMessage(body, attachment, MAX_DEMO_FILE_BYTES);
     const group = await this.getGroup(groupId, userId);
     if (!group) throw new Error("You're not in this group anymore.");
@@ -169,6 +182,9 @@ const localGroupService: GroupService = {
       body: body.trim(),
       ...(await attachmentToLocal(attachment)),
       createdAt: new Date().toISOString(),
+      replyToId: options?.replyToId ?? null,
+      forwarded: options?.forwarded ?? false,
+      reactions: [],
     };
     writeJSON(GROUP_MESSAGES_KEY, [...loadMessages(), message]);
     // The browser's storage is small; if it was full, nothing was saved.
@@ -193,6 +209,27 @@ const localGroupService: GroupService = {
             }
           : g,
       ),
+    );
+  },
+  async react(messageId, userId, emoji) {
+    const all = loadMessages();
+    const message = all.find((m) => m.id === messageId);
+    const group = message && (await this.getGroup(message.groupId, userId));
+    if (!message || !group) throw new Error("Message not found.");
+    saveMessages(
+      all.map((m) =>
+        m.id === messageId ? { ...m, reactions: withReaction(m.reactions, userId, emoji) } : m,
+      ),
+    );
+  },
+  async remove(messageId, userId) {
+    const all = loadMessages();
+    if (!all.some((m) => m.id === messageId && m.senderId === userId))
+      throw new Error("You can only delete your own messages.");
+    saveMessages(
+      all
+        .filter((m) => m.id !== messageId)
+        .map((m) => (m.replyToId === messageId ? { ...m, replyToId: null } : m)),
     );
   },
   onChange(_userId, listener) {
@@ -233,6 +270,8 @@ interface GroupMessageRow {
   file_size: number | null;
   file_type: string | null;
   created_at: string;
+  reply_to_id?: string | null;
+  forwarded?: boolean;
 }
 
 function fail(error: { message: string }): never {
@@ -260,7 +299,7 @@ async function rowsToGroups(rows: GroupRow[]): Promise<ChatGroup[]> {
 }
 
 async function rowsToMessages(rows: GroupMessageRow[]): Promise<GroupMessage[]> {
-  const [images, files] = await Promise.all([
+  const [images, files, reactions] = await Promise.all([
     signedUrls(
       IMAGE_BUCKET,
       rows.map((r) => r.image_path),
@@ -269,6 +308,10 @@ async function rowsToMessages(rows: GroupMessageRow[]): Promise<GroupMessage[]> 
       FILE_BUCKET,
       rows.map((r) => r.file_path),
       true,
+    ),
+    loadReactions(
+      "group_message_reactions",
+      rows.map((r) => r.id),
     ),
   ]);
   return rows.map((row) => ({
@@ -279,6 +322,9 @@ async function rowsToMessages(rows: GroupMessageRow[]): Promise<GroupMessage[]> 
     imageUrl: row.image_path ? (images.get(row.image_path) ?? null) : null,
     file: fileFromRow(row, files),
     createdAt: row.created_at,
+    replyToId: row.reply_to_id ?? null,
+    forwarded: row.forwarded ?? false,
+    reactions: reactions.get(row.id) ?? [],
   }));
 }
 
@@ -398,7 +444,7 @@ const supabaseGroupService: GroupService = {
     });
     if (error) fail(error);
   },
-  async send(groupId, userId, body, attachment) {
+  async send(groupId, userId, body, attachment, options) {
     checkMessage(body, attachment, MAX_FILE_BYTES);
     // Upload first, so the message never points to a missing file.
     const id = crypto.randomUUID();
@@ -408,7 +454,15 @@ const supabaseGroupService: GroupService = {
     );
     const { data, error } = await getSupabase()
       .from("group_messages")
-      .insert({ id, group_id: groupId, sender_id: userId, body: body.trim(), ...columns })
+      .insert({
+        id,
+        group_id: groupId,
+        sender_id: userId,
+        body: body.trim(),
+        ...columns,
+        ...(options?.replyToId && { reply_to_id: options.replyToId }),
+        ...(options?.forwarded && { forwarded: true }),
+      })
       .select("*")
       .single();
     if (error) {
@@ -426,9 +480,20 @@ const supabaseGroupService: GroupService = {
       .eq("user_id", userId);
     if (error) fail(error);
   },
+  react(messageId, userId, emoji) {
+    return saveReaction("group_message_reactions", messageId, userId, emoji);
+  },
+  remove(messageId, userId) {
+    return deleteMessage("group_messages", messageId, userId);
+  },
   onChange(userId, listener) {
     const channel = liveChannel(`groups:${userId}`)
       .on("postgres_changes", { event: "*", schema: "public", table: "group_messages" }, listener)
+      .on(
+        "postgres_changes",
+        { event: "*", schema: "public", table: "group_message_reactions" },
+        listener,
+      )
       .on("postgres_changes", { event: "*", schema: "public", table: "chat_groups" }, listener)
       .on(
         "postgres_changes",

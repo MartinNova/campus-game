@@ -145,4 +145,25 @@ describe("messages: rejected actions", () => {
     await messages.markRead("bob", "alice");
     expect((await messages.listMine("bob"))[0].readAt).not.toBeNull();
   });
+
+  it("only the sender can delete a message; replies to it lose the quote", async () => {
+    const hi = await messages.send("alice", "bob", "Hi Bob");
+    await messages.send("bob", "alice", "Hi!", undefined, { replyToId: hi.id });
+    await expect(messages.remove(hi.id, "bob")).rejects.toThrow(/your own/);
+    expect(await messages.listThread("alice", "bob")).toHaveLength(2);
+    await messages.remove(hi.id, "alice");
+    const [reply] = await messages.listThread("alice", "bob");
+    expect(reply.body).toBe("Hi!");
+    expect(reply.replyToId).toBeNull();
+  });
+
+  it("one reaction per person; outsiders can't react", async () => {
+    const hi = await messages.send("alice", "bob", "Hi Bob");
+    await messages.react(hi.id, "bob", "👍");
+    await messages.react(hi.id, "bob", "😂");
+    await expect(messages.react(hi.id, "carol", "❤️")).rejects.toThrow();
+    expect((await messages.listMine("bob"))[0].reactions).toEqual([{ userId: "bob", emoji: "😂" }]);
+    await messages.react(hi.id, "bob", null);
+    expect((await messages.listMine("bob"))[0].reactions).toEqual([]);
+  });
 });

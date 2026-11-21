@@ -46,6 +46,9 @@ const msg = (id: string, senderId: string, createdAt: string, groupId = "g1"): G
   imageUrl: null,
   file: null,
   createdAt,
+  replyToId: null,
+  forwarded: false,
+  reactions: [],
 });
 
 describe("validateGroupName / validateNewGroup", () => {

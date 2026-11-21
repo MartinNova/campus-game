@@ -29,6 +29,7 @@ The header shows **Sign in** when signed out, otherwise the settings gear and yo
    10. `20261119030000_student_id.sql` (student ID editable in Settings)
    11. `20261119040000_student_id_visible.sql` (student ID shown on profiles to other students)
    12. `20261121000000_student_count.sql` (number of students for the welcome screen, no names)
+   13. `20261122000000_message_actions.sql` (long-press on a message: reactions, reply, forward, delete)
 3. **Authentication → Sign In / Providers → Email**: enabled (default).
    - For a live demo, turn **Confirm email** off: Supabase's built-in mail server only
      sends a few e-mails per hour. With it on, new users must click a link first.

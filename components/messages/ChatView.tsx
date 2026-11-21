@@ -7,6 +7,8 @@ import { useCurrentUser } from "@/components/providers/CurrentUserProvider";
 import { usePresence } from "@/components/providers/PresenceProvider";
 import { Avatar } from "@/components/ui/Avatar";
 import { Card } from "@/components/ui/Card";
+import { messagePreview } from "@/lib/messages/messages";
+import { withReaction } from "@/lib/messages/reactions";
 import { directChatKey, isTypingToMe } from "@/lib/presence/presence";
 import { messageService } from "@/lib/services/message.service";
 import type { Attachment, Message } from "@/types/messages";
@@ -25,6 +27,7 @@ export function ChatView() {
 
   const [thread, setThread] = useState<{ key: string; messages: Message[] } | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const [replyTo, setReplyTo] = useState<Message | null>(null);
   const knownUsernames = new Set(users.map((u) => u.username).filter((u): u is string => !!u));
   const key = `${userId}:${otherId}`;
 
@@ -52,8 +55,35 @@ export function ChatView() {
 
   async function send(body: string, attachment?: Attachment) {
     if (!userId || !otherId) return;
-    await messageService.send(userId, otherId, body, attachment);
+    await messageService.send(userId, otherId, body, attachment, { replyToId: replyTo?.id });
+    setReplyTo(null);
     reload();
+  }
+
+  // Shown at once; the database confirms (or the reload undoes it).
+  function react(item: { id: string }, emoji: string | null) {
+    if (!userId) return;
+    setThread(
+      (t) =>
+        t && {
+          ...t,
+          messages: t.messages.map((m) =>
+            m.id === item.id ? { ...m, reactions: withReaction(m.reactions, userId, emoji) } : m,
+          ),
+        },
+    );
+    messageService.react(item.id, userId, emoji).then(reload, (err: unknown) => {
+      setError(err instanceof Error ? err.message : "Could not react.");
+      reload();
+    });
+  }
+
+  function remove(item: { id: string }) {
+    if (!userId) return;
+    if (replyTo?.id === item.id) setReplyTo(null);
+    messageService.remove(item.id, userId).then(reload, (err: unknown) => {
+      setError(err instanceof Error ? err.message : "Could not delete the message.");
+    });
   }
 
   if (!ready) return <div className="bg-border h-64 animate-pulse rounded-2xl" />;
@@ -123,6 +153,10 @@ export function ChatView() {
           userId={user.id}
           knownUsernames={knownUsernames}
           label={`Chat with ${name}`}
+          authorOf={(id) => (id === user.id ? "You" : other.firstName || name)}
+          onReact={react}
+          onReply={(item) => setReplyTo(messages.find((m) => m.id === item.id) ?? null)}
+          onDelete={remove}
           footer={
             messages.at(-1)?.senderId === user.id &&
             messages.at(-1)?.readAt && <li className="text-muted justify-self-end text-xs">Seen</li>
@@ -141,6 +175,13 @@ export function ChatView() {
       <Composer
         placeholder={`Message ${other.firstName || name}`}
         onSend={send}
+        replyTo={
+          replyTo && {
+            name: replyTo.senderId === user.id ? "yourself" : other.firstName || name,
+            preview: messagePreview(replyTo),
+          }
+        }
+        onCancelReply={() => setReplyTo(null)}
         onTyping={(on) => setTyping(on && otherId ? directChatKey(otherId) : null)}
       />
     </div>
