@@ -140,7 +140,7 @@ export function AboutSection({ form, set, userId }: SectionProps & { userId: str
           className={fieldClass}
         />
         <span className="text-muted mt-1 block text-xs font-normal">
-          Your Nova student number. Only you can see it.
+          Your Nova student number. Other students see it on your profile.
         </span>
       </label>
 
