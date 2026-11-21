@@ -1,12 +1,13 @@
 "use client";
 
-import { LogOut, UserPlus } from "lucide-react";
+import { ImageOff, LogOut, Pencil, UserPlus } from "lucide-react";
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useState } from "react";
 import { useCurrentUser } from "@/components/providers/CurrentUserProvider";
 import { usePresence } from "@/components/providers/PresenceProvider";
 import { Sheet } from "@/components/timetable/Sheet";
+import { useToast } from "@/components/ui/Toast";
 import { Avatar } from "@/components/ui/Avatar";
 import { Card } from "@/components/ui/Card";
 import { PageHeader } from "@/components/ui/PageHeader";
@@ -32,6 +33,7 @@ export function GroupInfoView() {
   const router = useRouter();
   const { user, users, ready } = useCurrentUser();
   const { presence } = usePresence();
+  const toast = useToast();
   const { group, reload } = useGroup(groupId, user?.id);
 
   const [editingName, setEditingName] = useState<string | null>(null);
@@ -155,26 +157,36 @@ export function GroupInfoView() {
             </div>
           )}
 
+          {/* Group settings (admins): name, people, picture, like WhatsApp's action tiles. */}
           {admin && editingName === null && (
-            <div className="flex gap-4">
-              <button
-                type="button"
-                onClick={() => setEditingName(group.name)}
-                className="text-brand h-11 px-2 text-[15px] font-semibold active:opacity-60"
-              >
-                Edit name
-              </button>
-              {group.photoUrl && (
-                <button
-                  type="button"
-                  onClick={() =>
-                    void run(() => groupService.updateGroup(group.id, { photo: null }))
-                  }
-                  className="text-brand h-11 px-2 text-[15px] font-semibold active:opacity-60"
-                >
-                  Remove picture
-                </button>
-              )}
+            <div className="mt-1 flex w-full max-w-sm gap-2">
+              {[
+                {
+                  label: "Edit name",
+                  icon: Pencil,
+                  run: () => setEditingName(group.name),
+                  show: true,
+                },
+                { label: "Add people", icon: UserPlus, run: () => setAdding([]), show: true },
+                {
+                  label: "Remove picture",
+                  icon: ImageOff,
+                  run: () => void run(() => groupService.updateGroup(group.id, { photo: null })),
+                  show: Boolean(group.photoUrl),
+                },
+              ]
+                .filter((a) => a.show)
+                .map(({ label, icon: Icon, run: action }) => (
+                  <button
+                    key={label}
+                    type="button"
+                    onClick={action}
+                    className="bg-background text-brand focus-visible:outline-brand flex min-h-16 flex-1 flex-col items-center justify-center gap-1 rounded-2xl px-2 py-2.5 text-[13px] font-semibold transition focus-visible:outline-2 active:scale-95"
+                  >
+                    <Icon className="size-5" aria-hidden />
+                    {label}
+                  </button>
+                ))}
             </div>
           )}
         </Card>
@@ -190,18 +202,6 @@ export function GroupInfoView() {
             {group.members.length} member{group.members.length === 1 ? "" : "s"}
           </h2>
           <ul className="bg-surface overflow-hidden rounded-3xl">
-            {admin && (
-              <li className="group">
-                <button type="button" onClick={() => setAdding([])} className={ROW}>
-                  <span className="bg-brand text-brand-foreground flex size-10 shrink-0 items-center justify-center rounded-full">
-                    <UserPlus className="size-5" aria-hidden />
-                  </span>
-                  <span className={ROW_INNER}>
-                    <span className="text-brand text-[17px] font-medium">Add people</span>
-                  </span>
-                </button>
-              </li>
-            )}
             {members.map((m) => {
               const u = userById(m.userId);
               const isMe = m.userId === me.id;
@@ -310,7 +310,7 @@ export function GroupInfoView() {
         </Sheet>
       )}
 
-      {adding && (
+      {adding && admin && (
         <Sheet title="Add people" onClose={() => setAdding(null)}>
           <div className="flex flex-col gap-4">
             <MemberPicker people={notInGroup} selected={adding} onChange={setAdding} />
@@ -319,7 +319,11 @@ export function GroupInfoView() {
               disabled={busy || adding.length === 0}
               onClick={async () => {
                 const ok = await run(() => groupService.addMembers(group.id, adding));
-                if (ok) setAdding(null);
+                if (!ok) return;
+                toast(
+                  `Added ${adding.length} ${adding.length === 1 ? "person" : "people"} to the group`,
+                );
+                setAdding(null);
               }}
               className="bg-brand text-brand-foreground h-12 rounded-2xl text-[17px] font-semibold transition active:scale-[0.98] disabled:opacity-50"
             >
