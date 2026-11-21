@@ -5,6 +5,7 @@ import Link from "next/link";
 import { GroupAvatar } from "@/components/groups/GroupAvatar";
 import { useMyGroups } from "@/components/groups/useMyGroups";
 import { useCurrentUser } from "@/components/providers/CurrentUserProvider";
+import { usePresence } from "@/components/providers/PresenceProvider";
 import { Avatar } from "@/components/ui/Avatar";
 import { Card } from "@/components/ui/Card";
 import { groupConversations as groupChats } from "@/lib/groups/groups";
@@ -14,6 +15,7 @@ import {
   groupConversations,
   messagePreview,
 } from "@/lib/messages/messages";
+import { isTypingToMe, typingInGroup, typingLabel } from "@/lib/presence/presence";
 import { useMyMessages } from "./useMyMessages";
 
 interface InboxRow {
@@ -24,6 +26,8 @@ interface InboxRow {
   /** ISO timestamp used for sorting and the time on the right. */
   time: string;
   preview: string;
+  /** Shown instead of the preview, like WhatsApp's "typing…". */
+  typing: string | null;
   unread: number;
 }
 
@@ -32,6 +36,7 @@ export function InboxView() {
   const { user, users, ready } = useCurrentUser();
   const messages = useMyMessages(user?.id);
   const groups = useMyGroups(user?.id);
+  const { presence } = usePresence();
 
   if (ready && !user) {
     return (
@@ -66,6 +71,7 @@ export function InboxView() {
             username={other?.username}
             url={other?.avatarUrl}
             size={52}
+            online={presence.online.has(otherUserId)}
           />
         ),
         name: other
@@ -73,6 +79,7 @@ export function InboxView() {
           : "Student",
         time: last.createdAt,
         preview: `${last.senderId === user.id ? "You: " : ""}${messagePreview(last)}`,
+        typing: isTypingToMe(presence, otherUserId, user.id) ? "typing…" : null,
         unread,
       };
     },
@@ -90,6 +97,11 @@ export function InboxView() {
         : group.createdBy === user.id
           ? "You created this group"
           : `${firstName(group.createdBy)} added you`,
+      typing: typingLabel(
+        typingInGroup(presence, group.id, user.id)
+          .filter((id) => group.members.some((m) => m.userId === id))
+          .map(firstName),
+      ),
       unread,
     }),
   );
@@ -150,9 +162,9 @@ export function InboxView() {
                   </span>
                   <span className="flex items-center justify-between gap-2">
                     <span
-                      className={`truncate text-[15px] ${row.unread ? "text-foreground font-medium" : "text-muted"}`}
+                      className={`truncate text-[15px] ${row.typing ? "text-brand font-medium" : row.unread ? "text-foreground font-medium" : "text-muted"}`}
                     >
-                      {row.preview}
+                      {row.typing ?? row.preview}
                     </span>
                     {row.unread > 0 && (
                       <span className="flex h-5 min-w-5 shrink-0 items-center justify-center rounded-full bg-[#d70015] px-1.5 text-[12px] font-semibold text-white tabular-nums">
